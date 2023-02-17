@@ -3,10 +3,11 @@ import re
 
 # import pandas
 
-def squad2xws(xws):
-    """post welcome message on member join"""
 
-    regex_result = re.search(r"v\dZ.*", xws)
+def convert_to_xws(yasb_link):
+    """get xwing-legacy link and parse it"""
+
+    regex_result = re.search(r"v\dZ.*", yasb_link)
     separated_xws = regex_result.group().split("Z")
     print(separated_xws)
 
@@ -34,9 +35,9 @@ def squad2xws(xws):
     return separated_pilots
 
 
-XWS_TEST = """ http://xwing-legacy.com/\
-              ?f=Separatist%20Alliance\
-              &d=v8ZsZ200Z421XWWWWY429XWWWWWWWY326XWWWW237\
-              &sn=Unnamed%20Squadron&obs=" """
+# XWS_TEST = """ http://xwing-legacy.com/\
+#               ?f=Separatist%20Alliance\
+#               &d=v8ZsZ200Z421XWWWWY429XWWWWWWWY326XWWWW237\
+#               &sn=Unnamed%20Squadron&obs=" """
 
-squad2xws(XWS_TEST)
+# convert_to_xws(XWS_TEST)
