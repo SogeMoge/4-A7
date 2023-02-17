@@ -206,52 +206,33 @@ async def on_message(message):
 
 
 @bot.slash_command(
-    guild_ids=[test_guild_id, russian_guild_id]
+    # guild_ids=[test_guild_id, russian_guild_id]
 )  # create a slash command for the supplied guilds
-async def links(ctx):
-    """Useful X-Wing resources"""
+async def rules(ctx):
+    """X-Wing 2.0 Legacy rules"""
 
     button1 = Button(
-        label="X-Wing 2.6 Rules",
-        url="https://www.atomicmassgames.com/xwing-documents",
+        label="X-Wing 2.0 Legacy rules",
+        url="https://x2po.org/rules%2C-points%2C-%26-faq-1",
     )
-    button2 = Button(
-        label="AMG Rules Forum", url="http://bit.ly/xwingrulesforum"
-    )
-    button3 = Button(
-        label="X-Wing Legacy 2.0 Rules",
-        url="https://infinitearenas.com/legacy/docs/",
-    )
-    button4 = Button(
-        label="Buying guide per factions", url="https://bit.ly/2WzBq0c"
-    )
-    button5 = Button(
-        label="Black Market A68", url="https://bit.ly/3DLZuhe"
-    )
-    view = View(button1, button2, button3, button4, button5)
-    await ctx.respond("Useful links:", view=view)
+    view = View(button1)
+    await ctx.respond("Rules:", view=view)
 
 
 @bot.slash_command(
-    guild_ids=[test_guild_id, russian_guild_id]
+    # guild_ids=[test_guild_id, russian_guild_id]
 )  # create a slash command for the supplied guilds
 async def builders(ctx):
     """Squad Builders for X-Wing from comunity"""
 
-    button1 = Button(label="YASB 2.6 (Web)", url="https://yasb.app/")
+    button1 = Button(
+        label="YASB 2.0 Legacy", url="https://xwing-legacy.com/"
+    )
     button2 = Button(
-        label="YASB Legacy 2.0 (Web)", url="https://xwing-legacy.com/"
+        label="X-Wing 2nd Ed. Squads Designer",
+        url="https://www.dmborque.eu/swz",
     )
-    button3 = Button(
-        label="Launch Bay Next (Web)", url="https://launchbaynext.app"
-    )
-    button4 = Button(
-        label="Launch Bay Next (Android)", url="https://bit.ly/3bP3GjG"
-    )
-    button5 = Button(
-        label="Launch Bay Next (iOS)", url="https://apple.co/3CToHVX"
-    )
-    view = View(button1, button2, button3, button4, button5)
+    view = View(button1, button2)
     await ctx.respond("Squad Builders:", view=view)
 
 
