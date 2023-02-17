@@ -33,7 +33,7 @@ from discord.ui import Button, View
 from dotenv import load_dotenv
 
 # custom bot modules
-from bot.parsing.squad2xws import convert_to_xws
+import bot.parsing.squad2xws as xws
 
 
 ##### Configure logging #####
@@ -97,7 +97,7 @@ async def on_message(message):
 
         # convert YASB link to XWS
         yasb_link = message.content
-        xws_raw = convert_to_xws(yasb_link)
+        xws_raw = xws.convert_to_xws(yasb_link)
     await yasb_channel.send(xws_raw)
 
 
