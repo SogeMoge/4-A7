@@ -6,7 +6,7 @@ import re
 def squad2xws(xws):
     """post welcome message on member join"""
 
-    regex_result = re.search("v\dZ.*", xws)
+    regex_result = re.search(r"v\dZ.*", xws)
     separated_xws = regex_result.group().split("Z")
     print(separated_xws)
 

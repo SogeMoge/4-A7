@@ -33,7 +33,7 @@ import requests
 from dotenv import load_dotenv
 
 # custom bot modules
-from xwsbot.parsing import squad2xws
+# from xwsbot.parsing import squad2xws
 
 
 ##### Configure logging #####
