@@ -4,7 +4,8 @@ COPY requirements.txt .
 RUN /usr/local/bin/python -m pip install --upgrade pip && pip install -r requirements.txt
 
 WORKDIR /opt/4-A7
-# COPY xwsbot/* ./
+COPY main.py .
+COPY xwsbot .
 
 ENTRYPOINT ["python3", "main.py"]
 
