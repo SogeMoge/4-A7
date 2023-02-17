@@ -33,7 +33,7 @@ from discord.ui import Button, View
 from dotenv import load_dotenv
 
 # custom bot modules
-from xwsbot.parsing.squad2xws import convert_to_xws
+from .parsing.squad2xws import convert_to_xws
 
 
 ##### Configure logging #####
