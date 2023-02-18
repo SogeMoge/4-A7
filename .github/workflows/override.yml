@@ -20,5 +20,6 @@ jobs:
             eval "$(ssh-agent -s)"
             ssh-add /opt/.ssh/github
             cd /opt/4-A7 && git pull
+            git submodule update --init --recursive
             sudo systemctl stop xwsbot
             sudo systemctl start xwsbot

@@ -5,6 +5,15 @@ on: push
     # branches: [ "master" ]
 
 jobs:
+  sumbodule_checkout:
+    runs-on: ubuntu-latest
+    steps:
+      - 
+        name: Checkout repository and submodules
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      
   build:
     runs-on: ubuntu-latest
     steps:
@@ -23,9 +32,6 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Checkout legacy submodule
-        run: git submodule update --init --recursive --checkout -f
       -
         name: Build and push
         uses: docker/build-push-action@v4
@@ -49,6 +55,6 @@ jobs:
             eval "$(ssh-agent -s)"
             ssh-add /opt/.ssh/github
             cd /opt/4-A7 && git pull
-            git submodule update --init --recursive --checkout -f
+            git submodule update --init --recursive
             sudo systemctl stop xwsbot
             sudo systemctl start xwsbot
