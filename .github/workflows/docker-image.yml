@@ -38,6 +38,8 @@ jobs:
         with:
           push: true
           tags: sogemoge/4-a7:${{ env.SHORT_SHA }}, sogemoge/4-a7:latest
+          secrets: |
+            GIT_AUTH_TOKEN=${{ secrets.MYTOKEN }}
   bot_reboot:
     runs-on: ubuntu-latest
     steps:

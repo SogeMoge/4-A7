@@ -3,7 +3,7 @@ name: Manual override
 on: workflow_dispatch
 
 jobs:
-  build:
+  reboot:
     runs-on: ubuntu-latest
     steps:
       -
