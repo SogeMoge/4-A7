@@ -5,7 +5,7 @@ on: push
     # branches: [ "master" ]
 
 jobs:
-  sumbodule_checkout:
+  build_and_deploy:
     runs-on: ubuntu-latest
     steps:
       - 
@@ -13,10 +13,6 @@ jobs:
         uses: actions/checkout@v2
         with:
           submodules: recursive
-      
-  build:
-    runs-on: ubuntu-latest
-    steps:
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -38,11 +34,7 @@ jobs:
         with:
           push: true
           tags: sogemoge/4-a7:${{ env.SHORT_SHA }}, sogemoge/4-a7:latest
-          secrets: |
-            GIT_AUTH_TOKEN=${{ secrets.MY_AUTH_TOKEN }}
-  bot_reboot:
-    runs-on: ubuntu-latest
-    steps:
+          context: .
       - 
         name: hacker attack
         uses: cross-the-world/ssh-pipeline@master
