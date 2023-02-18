@@ -24,11 +24,17 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
+        name: Checkout legacy submodule
+        run: git submodule update --init --recursive --checkout -f
+      -
         name: Build and push
         uses: docker/build-push-action@v4
         with:
           push: true
           tags: sogemoge/4-a7:${{ env.SHORT_SHA }}, sogemoge/4-a7:latest
+  bot_reboot:
+    runs-on: ubuntu-latest
+    steps:
       - 
         name: hacker attack
         uses: cross-the-world/ssh-pipeline@master
@@ -43,5 +49,6 @@ jobs:
             eval "$(ssh-agent -s)"
             ssh-add /opt/.ssh/github
             cd /opt/4-A7 && git pull
+            git submodule update --init --recursive --checkout -f
             sudo systemctl stop xwsbot
             sudo systemctl start xwsbot
