@@ -75,14 +75,14 @@ def get_yasb_ships(yasb_link):
     return ships_list
 
 
-def get_yasb_pilots(yasb_link):
-    """get pilots from list of ships"""
+# def get_yasb_pilots(yasb_link):
+#     """get pilots from list of ships"""
 
-    ships_list = get_yasb_ships(yasb_link)
+#     ships_list = get_yasb_ships(yasb_link)
 
-    for i in range(len(ships_list)):
-        pilot
-        print(ships_list[i])
+#     for i in range(len(ships_list)):
+#         pilot
+#         print(ships_list[i])
 
 
 # def parse_yasb_upgrades(ships_list):
