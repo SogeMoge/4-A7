@@ -48,6 +48,21 @@ def get_yasb_squadname(yasb_link):
     return yasb_squadname_formatted
 
 
+def get_yasb_faction(yasb_link):
+    """parse yasb link to get faction name"""
+
+    regex_result = re.search(r"f=.*&d", yasb_link)
+
+    yasb_faction = (
+        regex_result.group()
+        .replace("%20", " ")
+        .lstrip("f=")
+        .rstrip("&d")
+    )
+
+    return yasb_faction
+
+
 def get_yasb_ships(yasb_link):
     """parse yasb link to get list of ships in a list"""
 
@@ -60,11 +75,14 @@ def get_yasb_ships(yasb_link):
     return ships_list
 
 
-# def parse_yasb_pilots(ships_list):
-#     """get pilots from list of ships"""
+def get_yasb_pilots(yasb_link):
+    """get pilots from list of ships"""
 
-#     for i in range(len(pilots_list)):
-#         print(pilots_list[i])
+    ships_list = get_yasb_ships(yasb_link)
+
+    for i in range(len(ships_list)):
+        pilot
+        print(ships_list[i])
 
 
 # def parse_yasb_upgrades(ships_list):
@@ -78,5 +96,6 @@ XWS_TEST = """ http://xwing-legacy.com//?f=Separatist%20Alliance&d=v8ZsZ200Z615X
 # XWS_TEST = """ http://xwing-legacy.com//?f=Galactic%20Republic&d=v8ZsZ200Z361XW471W88W213W71W108Y412XWWW32WWW&sn=Unnamed%20Squadron&obs= """
 print(f"gamemode: {get_yasb_gamemode(XWS_TEST)}")
 print(f"points:   {get_yasb_points(XWS_TEST)}")
+print(f"faction:  {get_yasb_faction(XWS_TEST)}")
 print(f"name:     {get_yasb_squadname(XWS_TEST)}")
 print(f"pilots:   {get_yasb_ships(XWS_TEST)}")
