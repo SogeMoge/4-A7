@@ -92,8 +92,11 @@ def get_yasb_pilots(yasb_link):
 #         print(ships_list[i])
 
 
-XWS_TEST = """ http://xwing-legacy.com//?f=Separatist%20Alliance&d=v8ZsZ200Z615XWW98W32WWWWY408XWW354WWWW323Y335XWWWWWWW216W353&sn=Pupa&obs= """
-# XWS_TEST = """ http://xwing-legacy.com//?f=Galactic%20Republic&d=v8ZsZ200Z361XW471W88W213W71W108Y412XWWW32WWW&sn=Unnamed%20Squadron&obs= """
+XWS_TEST = """ http://xwing-legacy.com//\
+               ?f=Separatist%20Alliance&d=\
+               v8ZsZ200Z615XWW98W32WWWWY408\
+               XWW354WWWW323Y335XWWWWWWW216W353&sn=Pupa&obs= """
+
 print(f"gamemode: {get_yasb_gamemode(XWS_TEST)}")
 print(f"points:   {get_yasb_points(XWS_TEST)}")
 print(f"faction:  {get_yasb_faction(XWS_TEST)}")
