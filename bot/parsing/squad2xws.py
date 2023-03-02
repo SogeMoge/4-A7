@@ -1,13 +1,24 @@
 """get legacy-yasb link and convert it to XWS"""
 import re
+import requests
 
 # import pandas
+import json
+
+##### YASB PARSING VARS #####
+GITHUB_USER = "SogeMoge"
+GITHUB_BRANCH = "legacy"
+BASE_URL = f"https://raw.githubusercontent.com/{GITHUB_USER}/xwing-data2/{GITHUB_BRANCH}/"
+MANIFEST = "data/manifest.json"
+CHECK_FREQUENCY = 900  # 15 minutes
+##### YASB PARSING VARS #####
 
 
 def parse_yasb_link(yasb_link):
     """parse xwing-legacy yasb link
     and get pilots with upgrades as a list"""
 
+    # search link part containing elements of a squad
     regex_result = re.search(r"v\dZ.*", yasb_link)
     separated_yasb_link = regex_result.group().split("Z")
 
@@ -75,30 +86,59 @@ def get_yasb_ships(yasb_link):
     return ships_list
 
 
-# def get_yasb_pilots(yasb_link):
-#     """get pilots from list of ships"""
+def get_yasb_pilots(yasb_link):
+    """get pilots from list of ships"""
 
-#     ships_list = get_yasb_ships(yasb_link)
+    ships_list = get_yasb_ships(yasb_link)
+    pilots_list = []
 
-#     for i in range(len(ships_list)):
-#         pilot
-#         print(ships_list[i])
+    for i in range(len(ships_list)):
+        # search pilot numbers at the beginning of a string
+        regex_result = re.search(r"^\d*", ships_list[i])
+        pilot = regex_result.group()
+        pilots_list.append(pilot)
+
+    return pilots_list
 
 
-# def parse_yasb_upgrades(ships_list):
+def xws_compare(yasb_link):
+    pilots_list = get_yasb_pilots(yasb_link)
+
+    manifest_link = requests.get(BASE_URL + MANIFEST)
+    manifest = manifest_link.json()
+
+    files = (
+        manifest["damagedecks"]
+        + manifest["upgrades"]
+        + [manifest["conditions"]]
+        + [
+            ship
+            for faction in manifest["pilots"]
+            for ship in faction["ships"]
+        ]
+    )
+
+    return files
+    #     data = json.load(file_object)
+
+    # for i in data["pilotsById"]:
+    #     print(i)
+
+
+# def get_yasb_upgrades(ships_list):
 #     """get upgrades from list of hips per pilot"""
 
 #     for i in range(len(ships_list)):
 #         print(ships_list[i])
 
 
-XWS_TEST = """ http://xwing-legacy.com//\
-               ?f=Separatist%20Alliance&d=\
-               v8ZsZ200Z615XWW98W32WWWWY408\
-               XWW354WWWW323Y335XWWWWWWW216W353&sn=Pupa&obs= """
+XWS_TEST = """ http://xwing-legacy.com/?f=Separatist%20Alliance&d=v8ZsZ200Z615XWW98W32WWWWY408XWW354WWWW323Y335XWWWWWWW216W353&sn=Pupa&obs= """
 
 print(f"gamemode: {get_yasb_gamemode(XWS_TEST)}")
 print(f"points:   {get_yasb_points(XWS_TEST)}")
 print(f"faction:  {get_yasb_faction(XWS_TEST)}")
 print(f"name:     {get_yasb_squadname(XWS_TEST)}")
-print(f"pilots:   {get_yasb_ships(XWS_TEST)}")
+print(f"ships:    {get_yasb_ships(XWS_TEST)}")
+print(f"pilots:   {get_yasb_pilots(XWS_TEST)}")
+print(xws_compare(XWS_TEST))
+# print(f"upgrades: {get_yasb_upgrades(XWS_TEST)}")
