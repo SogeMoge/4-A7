@@ -2,3 +2,7 @@
 	path = submodules/xwing-legacy
 	url = git@github.com:Gan0n29/xwing.git
 	branch = xwing-legacy
+[submodule "submodules/xwing-data2"]
+	path = submodules/xwing-data2
+	url = git@github.com:SogeMoge/xwing-data2.git
+	branch = legacy
