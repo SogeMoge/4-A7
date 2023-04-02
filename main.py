@@ -33,7 +33,7 @@ from discord.ui import Button, View
 from dotenv import load_dotenv
 
 # custom bot modules
-import bot.parsing.squad2xws as yasb_converter
+import bot.parsing.yasb2squad as yasb_converter
 
 
 ##### Configure logging #####
@@ -77,7 +77,7 @@ date = date.today()
 @bot.event
 async def on_ready():
     """on_ready console message"""
-    bot.add_view(UpdateView())
+
     print(f"{bot.user} is ready!")
 
 
