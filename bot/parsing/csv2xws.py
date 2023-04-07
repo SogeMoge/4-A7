@@ -24,6 +24,7 @@ replacements = {"•": "",
                 "-": "",
                 " ": "",
                 "é": "e",
+                "/":"",
                 "(BoY)": "-battleofyavin",
                 "(BoY SL)": "-battleofyavin",
                 "(SoC)": "-siegeofcoruscant",
@@ -38,9 +39,9 @@ with open('X-Wing 2.0 Legacy Points document (March 23) - Rebel Alliance.csv',
     # Create a CSV reader object with ',' as the delimiter
     csvreader = csv.reader(csvfile, delimiter=',')
 
-    # Define the regex patterns for substitution
-    pattern1 = re.compile(r'[^a-zA-Z0-9(]')
-    pattern2 = re.compile(r'\s+')
+    # # Define the regex patterns for substitution
+    # pattern1 = re.compile(r'[^a-zA-Z0-9(]')
+    # pattern2 = re.compile(r'\s+')
 
     # Loop through the rows and extract data from the 3rd and 7th columns
     for i, row in enumerate(csvreader):
