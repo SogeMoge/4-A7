@@ -99,7 +99,8 @@ async def on_message(message):
     if message.author.bot:  # check that author is not the bot itself
         return
 
-    if "://xwing-legacy.com/?f" in message.content:
+    # if "://xwing-legacy.com/?f" in message.content:
+    if "://yasb.app/?f" in message.content:
         yasb_channel = message.channel
 
         # convert YASB link to XWS
