@@ -122,7 +122,7 @@ async def on_message(message):
 
     embed.add_field(
         name="Faction",
-        value=xws_dict['facton'],
+        value=xws_dict['faction'],
         inline=True,
     )
 
