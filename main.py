@@ -110,7 +110,7 @@ async def on_message(message):
 
     # await yasb_channel.send(xws_raw.json())
 
-    xws_dict = json.dumps(xws_raw)
+    xws_dict = json.dumps(xws_raw.json())
 
     for (
         key,
