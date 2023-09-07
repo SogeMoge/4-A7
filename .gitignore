@@ -136,6 +136,5 @@ dmypy.json
 
 # misc
 /bot/helpful_todo
-/submodules/xwing-data2/scripts/legacy/parsed.json
-/submodules/xwing-data2/scripts/legacy/test.py
+/submodules/xwing-data2/scripts/legacy/*
 
