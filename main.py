@@ -113,7 +113,7 @@ async def on_message(message):
     xws_dict = json.dumps(xws_raw.json())
 
     embed = discord.Embed(
-        title=xws_dict["name"],
+        title=xws_dict['name'],
         colour=discord.Colour.random(),
         url=message.content,
         description="YASB 2.5 list",
@@ -121,7 +121,7 @@ async def on_message(message):
 
     embed.add_field(
         name="Faction",
-        value=xws_dict["facton"],
+        value=xws_dict['facton'],
         inline=True,
     )
 
