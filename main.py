@@ -122,7 +122,7 @@ async def on_message(message):
     #     colour=discord.Colour.random(),
     #     url=message.content,
     #     # description="YASB 2.5 list",
-    )
+    # )
 
     # embed.add_field(
     #     # name="Faction",
