@@ -112,28 +112,18 @@ async def on_message(message):
 
     xws_dict = json.dumps(xws_raw.json())
 
-    for (
-        key,
-        value,
-    ) in (
-        xws_dict.items()
-    ):  # add embed title with list name as hyperlink
-        if key in ["name"]:
-            embed = discord.Embed(
-                title=value,
-                colour=discord.Colour.random(),
-                url=message.content,
-                description="YASB 2.5 list",
-            )
-    try:  # use custom name for squads with default name from yasb
-        embed
-    except NameError:
-        embed = discord.Embed(
-            title="Infamous Squadron",
-            colour=discord.Colour.random(),
-            url=message.content,
-            description="YASB 2.5 list",
-        )
+    embed = discord.Embed(
+        title=xws_dict["name"],
+        colour=discord.Colour.random(),
+        url=message.content,
+        description="YASB 2.5 list",
+    )
+
+    embed.add_field(
+        name="Faction",
+        value=xws_dict["facton"],
+        inline=True,
+    )
 
     embed.set_footer(
         text=message.author.display_name,
