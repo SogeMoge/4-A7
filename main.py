@@ -112,31 +112,35 @@ async def on_message(message):
 
     xws_string = json.dumps(xws_raw.json())
     xws_dict = json.loads(xws_string)
-
-    embed = discord.Embed(
-        title=xws_dict['name'],
-        colour=discord.Colour.random(),
-        url=message.content,
-        # description="YASB 2.5 list",
-    )
-
-    embed.add_field(
-        # name="Faction",
-        value=xws_dict['faction'],
-        inline=False,
-    )
     
-    embed.add_field(
-        # name="points",
-        value=xws_dict['points'],
-        inline=False,
+    embed = discord.Embed.from_dict(xws_dict)
+    embed.color = discord.Colour.random()
+    embed.url = message.content
+
+    # embed = discord.Embed(
+    #     title=xws_dict['name'],
+    #     colour=discord.Colour.random(),
+    #     url=message.content,
+    #     # description="YASB 2.5 list",
     )
+
+    # embed.add_field(
+    #     # name="Faction",
+    #     value=xws_dict['faction'],
+    #     inline=False,
+    # )
     
-    embed.add_field(
-        # name="points",
-        value=xws_dict['pilots'],
-        inline=True,
-    )
+    # embed.add_field(
+    #     # name="points",
+    #     value=xws_dict['points'],
+    #     inline=False,
+    # )
+    
+    # embed.add_field(
+    #     # name="points",
+    #     value=xws_dict['pilots'],
+    #     inline=True,
+    # )
     
     # for i, ember_heare in enumerate(xws_dict)
 
