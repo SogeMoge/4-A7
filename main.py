@@ -114,16 +114,10 @@ async def on_message(message):
     xws_dict = json.loads(xws_string)
 
     embed = discord.Embed(
-        # title=xws_dict['name'],
+        title=xws_dict['name'],
         colour=discord.Colour.random(),
-        # url=message.content,
-        # description="YASB 2.5 list",
-    )
-    
-    embed.add_field(
-        value=xws_dict['name'],
         url=message.content,
-        inline=True,
+        # description="YASB 2.5 list",
     )
 
     embed.add_field(
