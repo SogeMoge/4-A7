@@ -108,7 +108,7 @@ async def on_message(message):
         yasb_rb_link = RB_ENDPOINT + yasb_link
         xws_raw = requests.get(yasb_rb_link)
 
-    await yasb_channel.send(xws_raw)
+    await yasb_channel.send(xws_raw.json())
 
 
 # @bot.event
