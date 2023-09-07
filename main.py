@@ -1,4 +1,4 @@
-"""main bot file witt slash commands and events"""
+"""Main bot file witt slash commands and events."""
 # pylint: disable=wrong-import-position, consider-using-f-string, E0602:undefined-variable
 
 # https://stackoverflow.com/a/65908383
@@ -19,6 +19,9 @@ from datetime import date
 # from sqlite3 import Error
 import logging
 
+# to get http responce from RB
+import requests
+
 # pycord modules
 import discord
 
@@ -33,10 +36,10 @@ from discord.ui import Button, View
 from dotenv import load_dotenv
 
 # custom bot modules
-import bot.parsing.yasb2squad as yasb_converter
+# import bot.parsing.yasb2squad as yasb_converter
 
 
-##### Configure logging #####
+# Configure logging
 logger = logging.getLogger("discord")
 logger.setLevel(logging.INFO)
 handler = logging.FileHandler(
@@ -50,11 +53,12 @@ logger.addHandler(handler)
 intents = discord.Intents().all()
 bot = discord.Bot(intents=intents)
 
-#### Load .env vars and discord token"
+# Load .env vars and discord token
 load_dotenv()
 token = environ.get("DISCORD_TOKEN")
 
-##### YASB PARSING VARS #####
+#  #########################
+# YASB PARSING VARS
 GITHUB_USER = "Gan0n29"
 GITHUB_BRANCH = "xwing-legacy"
 BASE_URL = (
@@ -63,32 +67,35 @@ BASE_URL = (
 )
 MANIFEST = "data/manifest.json"
 CHECK_FREQUENCY = 900  # 15 minutes
-##### YASB PARSING WARS #####
+#  #########################
 
 UPDATE_REACTION = "\U0001f504"  # circle arrows
 accept_reactions = ["\U00002705", "\U0000274e"]  # check and cross marks
 date = date.today()
 
-#########################                 #########################
-#########################     EVENTS      #########################
-#########################                 #########################
+RB_ENDPOINT = (
+    """ https://rollbetter-linux.azurewebsites.net/lists/yasb? """
+)
+
+#  #########################
+#  EVENTS
+#  #########################
 
 
 @bot.event
 async def on_ready():
-    """on_ready console message"""
-
+    """Send on_ready console message."""
     print(f"{bot.user} is ready!")
 
 
-#########################                 #########################
-####################  LEGACY BUILDER PARSING ######################
-#########################                 #########################
+#  #########################
+#  LEGACY BUILDER PARSING
+#  #########################
 
 
 @bot.event
 async def on_message(message):
-    """parse legacy-yasb link to post embed list"""
+    """Parse legacy-yasb link to post embed list."""
     if message.author.bot:  # check that author is not the bot itself
         return
 
@@ -97,8 +104,10 @@ async def on_message(message):
 
         # convert YASB link to XWS
         yasb_link = message.content
-        yasb_raw = yasb_converter.get_yasb_ships(yasb_link)
-    await yasb_channel.send(yasb_raw)
+        yasb_rb_link = RB_ENDPOINT + yasb_link
+        xws_raw = requests.get(yasb_rb_link)
+
+    await yasb_channel.send(xws_raw)
 
 
 # @bot.event
@@ -216,9 +225,9 @@ async def on_message(message):
 # http://xwing-legacy.com/ -> http://squad2xws.herokuapp.com/yasb/xws
 # http://xwing-legacy.com/?f=Separatist%20Alliance&d=v8ZsZ200Z305X115WW207W229Y356X456W248Y542XW470WW367WY542XW470WW367W&sn=Royal%20escort&obs=
 
-#########################                 #########################
-#########################  INFO COMMANDS  #########################
-#########################                 #########################
+#  #########################
+# INFO COMMANDS
+#  #########################
 
 
 @bot.slash_command(
@@ -229,7 +238,7 @@ async def rules(ctx):
 
     button1 = Button(
         label="X-Wing 2.0 Legacy rules",
-        url="https://x2po.org/rules%2C-points%2C-%26-faq-1",
+        url="https://x2po.org/standard",
     )
     view = View(button1)
     await ctx.respond("Rules:", view=view)
