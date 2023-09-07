@@ -89,7 +89,7 @@ def get_yasb_pilots(yasb_link):
     ships_list = get_yasb_ships(yasb_link)
     pilots_list = []
 
-    for i, ships_list in enumerate(ships_list)):
+    for i, ships_list in enumerate(ships_list):
         # search pilot numbers at the beginning of a string
         regex_result = re.search(r"^\d*", ships_list)
         pilot = regex_result.group()
