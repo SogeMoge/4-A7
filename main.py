@@ -117,19 +117,13 @@ async def on_message(message):
         title=xws_dict['name'],
         colour=discord.Colour.random(),
         url=message.content,
-        # description="YASB 2.5 list",
-    )
-
-    embed.add_field(
-        name=discord.Embed.Empty,
-        value=xws_dict['faction'],
-        inline=False,
+        description=xws_dict['faction'],
     )
 
     embed.add_field(
         name=discord.Embed.Empty,
         value=xws_dict['points'],
-        inline=False,
+        inline=True,
     )
 
     embed.add_field(
