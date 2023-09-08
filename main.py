@@ -101,7 +101,7 @@ async def on_message(message):
         # convert YASB link to XWS
         yasb_link = message.content
         yasb_rb_link = RB_ENDPOINT + yasb_link
-        xws_raw = requests.get(yasb_rb_link)
+        xws_raw = requests.get(yasb_rb_link, timeout=10)
 
     # await yasb_channel.send(xws_raw.json())
 
@@ -109,11 +109,12 @@ async def on_message(message):
     xws_dict = json.loads(xws_string)
 
     squad_list = ""
+    squad_list += xws_dict['faction'] + ' [' + xws_dict['points'] + ']' + '\n'
+
     for key, value in xws_dict.items():
-        if isinstance(value, dict):
-            squad_list += f'{key}: {value}\n'
-        else:
-            squad_list += key + '\n'
+        if key == 'pilots' and isinstance(value, list):
+            squad_list += f'{key}: {", ".join(value)}\n'
+
 
 # str(xws_dict['faction']) + "[" + str(xws_dict['points']) + "]" + "\n" + str(xws_dict['pilots'][0]) + "\n" + str(xws_dict['pilots'][2])
     embed = discord.Embed(
