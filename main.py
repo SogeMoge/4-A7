@@ -111,20 +111,9 @@ async def on_message(message):
     squad_list = ""
     squad_list += str(xws_dict['faction']) + ' [' + str(xws_dict['points']) + ']' + '\n'
 
-    for key, value in xws_dict.items():
-        if key == 'pilots' and isinstance(value, list):
-            for item in value:
-            squad_list += f'  {{\n'
-            for subkey, subvalue in item.items():
-                if isinstance(subvalue, dict):
-                    squad_list += f'    "{subkey}": {{\n'
-                    for subsubkey, subsubvalue in subvalue.items():
-                        squad_list += f'      "{subsubkey}": "{subsubvalue}",\n'
-                    squad_list += '    },\n'
-                else:
-                    squad_list += f'    "{subkey}": "{subvalue}",\n'
-            squad_list += f'  }},\n'
-                    # squad_list += f'{subkey}: {", ".join(value)}\n'
+    if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
+        for item in xws_dict['pilots']:
+            squad_list += str(item) + '\n'
 
 
 # str(xws_dict['faction']) + "[" + str(xws_dict['points']) + "]" + "\n" + str(xws_dict['pilots'][0]) + "\n" + str(xws_dict['pilots'][2])
