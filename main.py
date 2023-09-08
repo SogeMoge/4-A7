@@ -109,7 +109,7 @@ async def on_message(message):
     xws_dict = json.loads(xws_string)
 
     squad_list = ""
-    squad_list += xws_dict['faction'] + ' [' + xws_dict['points'] + ']' + '\n'
+    squad_list += str(xws_dict['faction']) + ' [' + str(xws_dict['points']) + ']' + '\n'
 
     for key, value in xws_dict.items():
         if key == 'pilots' and isinstance(value, list):
