@@ -114,7 +114,7 @@ async def on_message(message):
         title=xws_dict['name'],
         colour=discord.Colour.random(),
         url=message.content,
-        description=xws_dict['faction'] + "[" + xws_dict['points'] + "]" + "\n" + xws_dict['pilots'][0] + "\n" + xws_dict['pilots'][2],
+        description=str(xws_dict['faction']) + "[" + str(xws_dict['points']) + "]" + "\n" + str(xws_dict['pilots'][0]) + "\n" + str(xws_dict['pilots'][2]),
     )
 
     # embed.add_field(
