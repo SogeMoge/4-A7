@@ -107,14 +107,20 @@ async def on_message(message):
 
     xws_string = json.dumps(xws_raw.json())
     xws_dict = json.loads(xws_string)
-    
-    squad_list = {}
 
+    squad_list = ""
+    for key, value in xws_dict.items():
+        if isinstance(value, dict):
+            squad_list += f'{key}: {value}\n'
+        else:
+            squad_list += key + '\n'
+
+# str(xws_dict['faction']) + "[" + str(xws_dict['points']) + "]" + "\n" + str(xws_dict['pilots'][0]) + "\n" + str(xws_dict['pilots'][2])
     embed = discord.Embed(
         title=xws_dict['name'],
         colour=discord.Colour.random(),
         url=message.content,
-        description=str(xws_dict['faction']) + "[" + str(xws_dict['points']) + "]" + "\n" + str(xws_dict['pilots'][0]) + "\n" + str(xws_dict['pilots'][2]),
+        description=squad_list,
     )
 
     # embed.add_field(
