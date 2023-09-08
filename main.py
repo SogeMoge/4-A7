@@ -113,8 +113,10 @@ async def on_message(message):
 
     if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
         for item in xws_dict['pilots']:
-            squad_list += str(item) + '\n'
-
+            # squad_list += str(item) + '\n'
+            if all(key in item for key in ["ship", "name", "points", "upgrades"]):
+                values = [item[key] for key in ["ship", "name", "points", "upgrades"]]
+                squad_list += ", ".join(map(str, values)) + '\n'
 
 # str(xws_dict['faction']) + "[" + str(xws_dict['points']) + "]" + "\n" + str(xws_dict['pilots'][0]) + "\n" + str(xws_dict['pilots'][2])
     embed = discord.Embed(
