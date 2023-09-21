@@ -34,17 +34,23 @@ from dotenv import load_dotenv
 # import bot.parsing.yasb2squad as yasb_converter
 
 
+# # Configure logging
+# logger = logging.getLogger("discord")
+# logger.setLevel(logging.INFO)
+# handler = logging.FileHandler(
+#     filename="xwsbot.log", encoding="utf-8", mode="w"
+# )
+# handler.setFormatter(
+#     logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
+# )
+# logger.addHandler(handler)
 # Configure logging
-logger = logging.getLogger("discord")
-logger.setLevel(logging.INFO)
-handler = logging.FileHandler(
-    filename="xwsbot.log", encoding="utf-8", mode="w"
-)
-handler.setFormatter(
-    logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
-)
-logger.addHandler(handler)
-
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler = logging.FileHandler('xwsbot.log')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 intents = discord.Intents().all()
 bot = discord.Bot(intents=intents)
 
@@ -94,14 +100,17 @@ async def on_message(message):
     if message.author.bot:  # check that author is not the bot itself
         return
 
+    yasb_url_pattern = re.compile(r'https?://yasb\.app/\?f')
+    yasb_url_match = yasb_url_pattern.search(message.content)
+    
     # if "://xwing-legacy.com/?f" in message.content:
-    if "://yasb.app/?f" in message.content:
+    if match:
+        yasb_url = match.group(0)
         yasb_channel = message.channel
 
         # convert YASB link to XWS
-        yasb_link = message.content
-        yasb_rb_link = RB_ENDPOINT + yasb_link
-        xws_raw = requests.get(yasb_rb_link, timeout=10)
+        yasb_rb_url = RB_ENDPOINT + yasb_url
+        xws_raw = requests.get(yasb_rb_url, timeout=10)
 
     # await yasb_channel.send(xws_raw.json())
 
@@ -118,27 +127,12 @@ async def on_message(message):
                 values = [item[key] for key in ["ship", "name", "points", "upgrades"]]
                 squad_list += ", ".join(map(str, values)) + '\n'
 
-# str(xws_dict['faction']) + "[" + str(xws_dict['points']) + "]" + "\n" + str(xws_dict['pilots'][0]) + "\n" + str(xws_dict['pilots'][2])
     embed = discord.Embed(
         title=xws_dict['name'],
         colour=discord.Colour.random(),
         url=message.content,
         description=squad_list,
     )
-
-    # embed.add_field(
-    #     name=discord.Embed.Empty,
-    #     value=xws_dict['points'],
-    #     inline=True,
-    # )
-
-    # embed.add_field(
-    #     name=discord.Embed.Empty,
-    #     value=xws_dict['pilots'],
-    #     inline=True,
-    # )
-
-    # for i, ember_heare in enumerate(xws_dict)
 
     embed.set_footer(
         text=message.author.display_name,
