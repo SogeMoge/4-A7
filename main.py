@@ -1,34 +1,22 @@
 """Main bot file witt slash commands and events."""
 # pylint: disable=wrong-import-position, consider-using-f-string, E0602:undefined-variable
 
-# https://stackoverflow.com/a/65908383
-# fixes libgcc_s.so.1 must be installed for pthread_cancel to work
 import ctypes
-libgcc_s = ctypes.CDLL("libgcc_s.so.1")
 
-# module for importing env variables
-from os import environ
-
-# import subprocess
-from datetime import date
-
-# modules for YASB link parsing
-import json
-
-# from sqlite3 import Error
 import logging
-
-# to get http responce from RB
+import json
+import re
+from os import environ
+from datetime import date
 import requests
+from dotenv import load_dotenv
 
 # pycord modules
 import discord
-
-# from discord.commands import permissions
 from discord.ui import Button, View
 
-# import requests
-from dotenv import load_dotenv
+# fixes libgcc_s.so.1 must be installed for pthread_cancel to work
+libgcc_s = ctypes.CDLL("libgcc_s.so.1")
 
 # custom bot modules
 # import bot.parsing.yasb2squad as yasb_converter
@@ -104,8 +92,8 @@ async def on_message(message):
     yasb_url_match = yasb_url_pattern.search(message.content)
     
     # if "://xwing-legacy.com/?f" in message.content:
-    if match:
-        yasb_url = match.group(0)
+    if yasb_url_match:
+        yasb_url = yasb_url_match.group(0)
         yasb_channel = message.channel
 
         # convert YASB link to XWS
