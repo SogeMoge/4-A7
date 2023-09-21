@@ -100,7 +100,7 @@ async def on_message(message):
     if message.author.bot:  # check that author is not the bot itself
         return
 
-    yasb_url_pattern = re.compile(r'https?://yasb\.app/\?f')
+    yasb_url_pattern = re.compile(r'https?:\/\/yasb\.app\/\?f=\S+')
     yasb_url_match = yasb_url_pattern.search(message.content)
     
     # if "://xwing-legacy.com/?f" in message.content:
