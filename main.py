@@ -94,6 +94,7 @@ async def on_message(message):
     # if "://xwing-legacy.com/?f" in message.content:
     if yasb_url_match:
         yasb_url = yasb_url_match.group(0)
+        yasb_url = yasb_url.replace('http://', 'https://')
         yasb_channel = message.channel
 
         # convert YASB link to XWS
@@ -114,7 +115,7 @@ async def on_message(message):
             if all(key in item for key in ["ship", "name", "points", "upgrades"]):
                 values = [item[key] for key in ["ship", "name", "points", "upgrades"]]
                 squad_list += ", ".join(map(str, values)) + '\n'
-
+    
     embed = discord.Embed(
         title=xws_dict['name'],
         colour=discord.Colour.random(),
