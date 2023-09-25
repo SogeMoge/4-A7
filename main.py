@@ -63,7 +63,7 @@ accept_reactions = ["\U00002705", "\U0000274e"]  # check and cross marks
 date = date.today()
 
 RB_ENDPOINT = (
-    """ https://rollbetter-linux.azurewebsites.net/lists/yasb? """
+    """ https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy? """
 )
 
 #  #########################
@@ -88,7 +88,7 @@ async def on_message(message):
     if message.author.bot:  # check that author is not the bot itself
         return
 
-    yasb_url_pattern = re.compile(r'https?:\/\/yasb\.app\/\?f=[^\s]+')
+    yasb_url_pattern = re.compile(r'https?:\/\/xwing-legacy\.com\/\?f=[^\s]+')
     yasb_url_match = yasb_url_pattern.search(message.content)
 
     # if "://xwing-legacy.com/?f" in message.content:
