@@ -15,7 +15,9 @@ def convert_xws(string):
         'galacticrepublic': 'Galactic Republic',
         'separatistalliance': 'Separatist Alliance'
     }
-    return mapping.get(string.lower(), string)
+    words = string.split()
+    converted_words = [mapping.get(word.lower(), word) for word in words]
+    return " ".join(converted_words)
 
 # exportObj.fromXWSUpgrade =
 #     'amd': 'Astromech'
