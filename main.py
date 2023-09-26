@@ -128,8 +128,7 @@ async def on_message(message):
                 ]
                 upgrades = []
                 for upgrade_list in item['upgrades'].items():
-                    for upgrade in upgrade_list:
-                        upgrades.append(upgrade)
+                    upgrades.extend(upgrade_list)
                 upgrades_str = ", ".join(upgrades)
                 squad_list += f"{values[0]}, {values[1]}: {upgrades_str} [{values[2]}]\n"
                 # squad_list += ", ".join(map(str, values)) + '\n'
