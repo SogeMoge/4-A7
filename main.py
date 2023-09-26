@@ -115,6 +115,9 @@ async def on_message(message):
         ']' +
         '\n'
     )
+    print(squad_list)
+    squad_list = convert_xws(squad_list)
+    print(squad_list)
 
     if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
         for item in xws_dict['pilots']:
@@ -131,7 +134,9 @@ async def on_message(message):
                 for upgrade_type, upgrade_list in item['upgrades'].items():
                     upgrades.extend(upgrade_list)
                 upgrades_str = ", ".join(upgrades)
+                print(squad_list)
                 squad_list = convert_xws(squad_list)
+                print(squad_list)
                 squad_list += f"{values[0]}, {values[1]}: {upgrades_str} [{values[2]}]\n"
                 # squad_list += ", ".join(map(str, values)) + '\n'
 
