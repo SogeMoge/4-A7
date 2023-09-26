@@ -16,7 +16,7 @@ import discord
 from discord.ui import Button, View
 
 # custom bot modules
-from bot.xws2pretty import convert_faction
+from bot.xws2pretty import convert_xws
 
 # fixes libgcc_s.so.1 must be installed for pthread_cancel to work
 libgcc_s = ctypes.CDLL("libgcc_s.so.1")
@@ -108,7 +108,7 @@ async def on_message(message):
     squad_list = ""
     # squad_list += str(xws_dict['faction']) + ' [' + str(xws_dict['points']) + ']' + '\n'
     squad_list += (
-        convert_faction(str(xws_dict['faction'])) +
+        str(xws_dict['faction']) +
         ' [' +
         str(xws_dict['points']) +
         ']' +
@@ -138,7 +138,7 @@ async def on_message(message):
         title=xws_dict['name'],
         colour=discord.Colour.random(),
         url=yasb_url,
-        description=squad_list,
+        description=convert_xws(squad_list),
     )
 
     embed.set_footer(

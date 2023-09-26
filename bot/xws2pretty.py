@@ -1,7 +1,7 @@
 """Variables for xws_dict conversion to pretty format."""
 
 
-def convert_faction(string):
+def convert_xws(string):
     """Convert xws faction name to readable format."""
     mapping = {
         'rebelalliance': 'Rebel Alliance',
