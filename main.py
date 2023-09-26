@@ -15,13 +15,11 @@ from dotenv import load_dotenv
 import discord
 from discord.ui import Button, View
 
+# custom bot modules
+from bot.xws2pretty import convert_faction
+
 # fixes libgcc_s.so.1 must be installed for pthread_cancel to work
 libgcc_s = ctypes.CDLL("libgcc_s.so.1")
-
-# custom bot modules
-# import bot.parsing.yasb2squad as yasb_converter
-from bot.conversion.yasb2xws import convert_faction
-
 
 # # Configure logging
 # logger = logging.getLogger("discord")
@@ -129,7 +127,7 @@ async def on_message(message):
                         ]
                 ]
                 upgrades = []
-                for upgrade_type, upgrade_list in item['upgrades'].items():
+                for upgrade_list in item['upgrades'].items():
                     for upgrade in upgrade_list:
                         upgrades.append(upgrade)
                 upgrades_str = ", ".join(upgrades)
