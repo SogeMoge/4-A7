@@ -107,15 +107,34 @@ async def on_message(message):
     xws_dict = json.loads(xws_string)
 
     squad_list = ""
-    squad_list += str(xws_dict['faction']) + ' [' + str(xws_dict['points']) + ']' + '\n'
+    # squad_list += str(xws_dict['faction']) + ' [' + str(xws_dict['points']) + ']' + '\n'
+    squad_list += (
+        str(xws_dict['faction']) +
+        ' [' +
+        str(xws_dict['points']) +
+        ']' +
+        '\n'
+    )
 
     if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
         for item in xws_dict['pilots']:
             # squad_list += str(item) + '\n'
             if all(key in item for key in ["ship", "name", "points", "upgrades"]):
-                values = [item[key] for key in ["ship", "name", "points", "upgrades"]]
-                squad_list += ", ".join(map(str, values)) + '\n'
-    
+                values = [item[key] for key in [
+                                "ship",
+                                "name",
+                                "points",
+                                "upgrades"
+                        ]
+                ]
+                upgrades = []
+                for upgrade_type, upgrade_list in item['upgrades'].items():
+                    for upgrade in upgrade_list:
+                        upgrades.append(upgrade)
+                upgrades_str = ", ".join(upgrades)
+                squad_list += f"{values[0]}, {values[1]}: {upgrades_str} [{values[2]}]\n"
+                # squad_list += ", ".join(map(str, values)) + '\n'
+
     embed = discord.Embed(
         title=xws_dict['name'],
         colour=discord.Colour.random(),
