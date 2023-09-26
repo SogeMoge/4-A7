@@ -86,7 +86,7 @@ async def on_message(message):
     """Parse legacy-yasb link to post embed list."""
     if message.author.bot:  # check that author is not the bot itself
         return
-
+    bot_has_message_permissions = message.guild and message.channel.permissions_for(message.guild.me).manage_messages
     yasb_url_pattern = re.compile(r'https?:\/\/xwing-legacy\.com\/\?f=[^\s]+')
     yasb_url_match = yasb_url_pattern.search(message.content)
 
@@ -146,7 +146,36 @@ async def on_message(message):
     )
 
     await yasb_channel.send(embed=embed)
-    await message.delete()
+    
+    # allow the user to delete their query message
+    if bot_has_message_permissions:
+        prompt_delete_previous_message = await message.channel.send("Delete your message?")
+        await prompt_delete_previous_message.add_reaction("✅")
+        await prompt_delete_previous_message.add_reaction("❌"
+        try:
+            reaction, user = await self.wait_for(
+                event="reaction_add",
+                timeout=10,
+                check=lambda reaction, user: user == message.author
+            )
+            if str(reaction.emoji) == "✅":
+                await message.delete()
+                await prompt_delete_previous_message.delete()
+                if finalEmbed and finalMessage:
+                    finalEmbed.set_footer(
+                        text=f"{message.author.display_name} requested this data.",
+                        icon_url=message.author.avatar.url
+                    )
+                    await finalMessage.edit(embed=finalEmbed)
+                return
+            if str(reaction.emoji) == "❌":
+                await prompt_delete_previous_message.delete()
+                return
+        except asyncio.TimeoutError:
+            await prompt_delete_previous_message.delete()
+            return
+    
+    # await message.delete()
 
 #  #########################
 # INFO COMMANDS
