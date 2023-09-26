@@ -131,6 +131,7 @@ async def on_message(message):
                 for upgrade_type, upgrade_list in item['upgrades'].items():
                     upgrades.extend(upgrade_list)
                 upgrades_str = ", ".join(upgrades)
+                squad_list = convert_xws(squad_list)
                 squad_list += f"{values[0]}, {values[1]}: {upgrades_str} [{values[2]}]\n"
                 # squad_list += ", ".join(map(str, values)) + '\n'
 
@@ -138,7 +139,7 @@ async def on_message(message):
         title=xws_dict['name'],
         colour=discord.Colour.random(),
         url=yasb_url,
-        description=convert_xws(squad_list),
+        description=squad_list,
     )
 
     embed.set_footer(
@@ -147,7 +148,7 @@ async def on_message(message):
     )
 
     await yasb_channel.send(embed=embed)
-    
+
     # allow the user to delete their query message
     if bot_has_message_permissions:
         prompt_delete_previous_message = await message.channel.send("Delete your message?")
@@ -169,7 +170,6 @@ async def on_message(message):
         except asyncio.TimeoutError:
             await prompt_delete_previous_message.delete()
             return
-    # await message.delete()
 
 #  #########################
 # INFO COMMANDS
