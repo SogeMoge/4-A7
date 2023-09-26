@@ -133,15 +133,15 @@ async def on_message(message):
                 upgrades_str = ", ".join(upgrades)
                 squad_list += f"{values[0]}, {values[1]}: {upgrades_str} [{values[2]}]\n"
 
-    print(f"before convert {squad_list}")
-    squad_list = convert_xws(squad_list)
-    print(f"After convert {squad_list}")
+    lines = squad_list.splitlines()
+    converted_lines = [convert_xws(line) for line in lines]
+    converted_squad_list = "\n".join(converted_lines)
 
     embed = discord.Embed(
         title=xws_dict['name'],
         colour=discord.Colour.random(),
         url=yasb_url,
-        description=squad_list,
+        description=converted_squad_list,
     )
 
     embed.set_footer(
