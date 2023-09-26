@@ -134,8 +134,22 @@ async def on_message(message):
                 squad_list += f"{values[0]}, {values[1]}: {upgrades_str} [{values[2]}]\n"
 
     lines = squad_list.splitlines()
+
     converted_lines = [convert_xws(line) for line in lines]
     converted_squad_list = "\n".join(converted_lines)
+
+    lines = converted_squad_list.splitlines()
+
+    # Replace the first word of each line (starting with the second) with the corresponding emoji
+    for i in range(1, len(lines)):
+        words = lines[i].split()
+        ship_name = words[0].lower().replace(',', '')
+        if ship_name in ship_emojis:
+            words[0] = ship_emojis[ship_name]
+        lines[i] = " ".join(words)
+
+    # Join the lines back together into a single string
+    converted_squad_list = "\n".join(lines)
 
     embed = discord.Embed(
         title=xws_dict['name'],

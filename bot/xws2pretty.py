@@ -28,3 +28,11 @@ def convert_xws(string):
 #     'mod': 'Modification'
 #     'force-power':'Force'
 #     'tactical-relay':'Tactical Relay'
+
+
+ship_emojis = {
+    'tieinterceptor': '🛩️',
+    'tiefighter': '🤖',
+    'tiebomber': '🍕',
+    # Add more ship names and emojis as needed
+}
