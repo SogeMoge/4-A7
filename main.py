@@ -20,6 +20,7 @@ libgcc_s = ctypes.CDLL("libgcc_s.so.1")
 
 # custom bot modules
 # import bot.parsing.yasb2squad as yasb_converter
+from bot.conversion.yasb2xws import convert_faction
 
 
 # # Configure logging
@@ -109,7 +110,7 @@ async def on_message(message):
     squad_list = ""
     # squad_list += str(xws_dict['faction']) + ' [' + str(xws_dict['points']) + ']' + '\n'
     squad_list += (
-        str(xws_dict['faction']) +
+        convert_faction(str(xws_dict['faction'])) +
         ' [' +
         str(xws_dict['points']) +
         ']' +
