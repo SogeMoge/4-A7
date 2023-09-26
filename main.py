@@ -10,6 +10,7 @@ from os import environ
 from datetime import date
 import requests
 from dotenv import load_dotenv
+import asyncio
 
 # pycord modules
 import discord
@@ -151,9 +152,9 @@ async def on_message(message):
     if bot_has_message_permissions:
         prompt_delete_previous_message = await message.channel.send("Delete your message?")
         await prompt_delete_previous_message.add_reaction("✅")
-        await prompt_delete_previous_message.add_reaction("❌"
+        await prompt_delete_previous_message.add_reaction("❌")
         try:
-            reaction, user = await self.wait_for(
+            reaction, user = await bot.wait_for(
                 event="reaction_add",
                 timeout=10,
                 check=lambda reaction, user: user == message.author
@@ -161,12 +162,6 @@ async def on_message(message):
             if str(reaction.emoji) == "✅":
                 await message.delete()
                 await prompt_delete_previous_message.delete()
-                if finalEmbed and finalMessage:
-                    finalEmbed.set_footer(
-                        text=f"{message.author.display_name} requested this data.",
-                        icon_url=message.author.avatar.url
-                    )
-                    await finalMessage.edit(embed=finalEmbed)
                 return
             if str(reaction.emoji) == "❌":
                 await prompt_delete_previous_message.delete()
@@ -174,7 +169,6 @@ async def on_message(message):
         except asyncio.TimeoutError:
             await prompt_delete_previous_message.delete()
             return
-    
     # await message.delete()
 
 #  #########################
