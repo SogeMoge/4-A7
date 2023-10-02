@@ -104,8 +104,8 @@ async def on_message(message):
 
     # await yasb_channel.send(xws_raw.json())
 
-    xws_string = json.dumps(xws_raw.json())
-    xws_dict = json.loads(xws_string)
+        xws_string = json.dumps(xws_raw.json())
+        xws_dict = json.loads(xws_string)
 
     squad_list = ""
     # squad_list += str(xws_dict['faction']) + ' [' + str(xws_dict['points']) + ']' + '\n'
