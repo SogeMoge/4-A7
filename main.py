@@ -145,8 +145,10 @@ async def on_message(message):
     for i in range(1, len(lines)):
         words = lines[i].split()
         ship_name = words[0]
+        print(ship_name)
         if ship_name in ship_emojis:
             words[0] = ship_emojis[ship_name]
+            print(words[0])
         lines[i] = " ".join(words)
 
     # Join the lines back together into a single string
