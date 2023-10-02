@@ -146,7 +146,9 @@ async def on_message(message):
         words = lines[i].split()
         ship_name = words[0].lower().replace(',', '')
         if ship_name in ship_emojis:
-            words[0] = ship_emojis[ship_name]
+            emoji_id = ship_emojis[ship_name]
+            emoji = await bot.fetch_emoji(emoji_id)
+            words[0] = str(emoji)
         lines[i] = " ".join(words)
 
     # Join the lines back together into a single string
@@ -187,7 +189,7 @@ async def on_message(message):
         except asyncio.TimeoutError:
             await prompt_delete_previous_message.delete()
             return
-    await yasb_channel.send(":scavengedyt1300:")
+
 
 #  #########################
 # INFO COMMANDS
