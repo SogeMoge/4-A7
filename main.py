@@ -8,9 +8,9 @@ import json
 import re
 from os import environ
 from datetime import date
+import asyncio
 import requests
 from dotenv import load_dotenv
-import asyncio
 
 # pycord modules
 import discord
@@ -187,6 +187,7 @@ async def on_message(message):
         except asyncio.TimeoutError:
             await prompt_delete_previous_message.delete()
             return
+    await message.channel.send(":scavengedyt1300:")
 
 #  #########################
 # INFO COMMANDS
