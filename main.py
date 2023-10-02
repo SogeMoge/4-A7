@@ -144,7 +144,7 @@ async def on_message(message):
     # Replace the first word of each line (starting with the second) with the corresponding emoji
     for i in range(1, len(lines)):
         words = lines[i].split()
-        ship_name = words[0]
+        ship_name = words[0].lower().replace(',', '')
         print(ship_name)
         if ship_name in ship_emojis:
             words[0] = ship_emojis[ship_name]
