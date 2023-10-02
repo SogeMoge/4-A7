@@ -44,7 +44,7 @@ ship_emojis = {
     "auzituckgunship": "@",
     "btla4ywing": "y",
     "btls8kwing": "k",
-    "ewing": "1158007223516143689",
+    "ewing": "<:ewing:1158007223516143689>",
     "fangfighter": "M",
     "hwk290lightfreighter": "h",
     "modifiedyt1300lightfreighter": "m",
