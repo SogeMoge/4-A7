@@ -187,7 +187,7 @@ async def on_message(message):
         except asyncio.TimeoutError:
             await prompt_delete_previous_message.delete()
             return
-    await message.channel.send(":scavengedyt1300:")
+    await yasb_channel.send(":scavengedyt1300:")
 
 #  #########################
 # INFO COMMANDS
