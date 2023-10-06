@@ -56,6 +56,7 @@ fonts = {
         "ut60duwing": "u",
         "vcx100lightfreighter": "G",
         "yt2400lightfreighter": "o",
+        "yt2400lightfreighter2023": "o",
         "z95af4headhunter": "z",
         "aggressorassaultfighter": "i",
         "jumpmaster5000": "p",
@@ -134,6 +135,7 @@ fonts = {
 
 size = (128, 128)
 
+
 def main():
     if not os.path.exists('emoji'):
         os.mkdir('emoji')
@@ -154,7 +156,6 @@ def main():
             imfont = ImageFont.truetype(font, fontSize)
             for colour_name, colour in colours:
                 im = Image.new("RGBA", (300, 300), (255, 255, 255, 0))
-
 
                 draw = ImageDraw.Draw(im)
 
@@ -177,6 +178,7 @@ def main():
 
                 # write into file
                 background.save(f"emoji/{colour_name}{name}.png")
+
 
 if __name__ == '__main__':
     main()

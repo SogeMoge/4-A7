@@ -54,6 +54,7 @@ ship_emojis = {
     "ut60duwing": "u",
     "vcx100lightfreighter": "G",
     "yt2400lightfreighter": "o",
+    "yt2400lightfreighter2023": "o",
     "z95af4headhunter": "z",
     "aggressorassaultfighter": "i",
     "jumpmaster5000": "p",
