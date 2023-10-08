@@ -19,6 +19,7 @@ from discord.ui import Button, View
 # custom bot modules
 from bot.xws2pretty import convert_xws
 from bot.xws2pretty import ship_emojis
+from bot.xws2pretty import convert_faction_to_dir
 
 # fixes libgcc_s.so.1 must be installed for pthread_cancel to work
 libgcc_s = ctypes.CDLL("libgcc_s.so.1")
