@@ -45,7 +45,7 @@ bot = discord.Bot(intents=intents)
 
 # Load .env vars and discord token
 load_dotenv()
-token = environ.get("DISCORD_TOKEN")
+token = os.environ.get("DISCORD_TOKEN")
 
 #  #########################
 # YASB PARSING VARS
