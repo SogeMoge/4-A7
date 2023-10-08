@@ -88,10 +88,8 @@ async def on_message(message):
     """Parse legacy-yasb link to post embed list."""
     if message.author.bot:  # check that author is not the bot itself
         return
-    bot_has_message_permissions = message.guild and \
-        message.channel.permissions_for(message.guild.me).manage_messages
-    yasb_url_pattern = re.compile(
-        r'https?:\/\/xwing-legacy\.com\/\?f=[^\s]+')
+    bot_has_message_permissions = message.guild and message.channel.permissions_for(message.guild.me).manage_messages
+    yasb_url_pattern = re.compile(r'https?:\/\/xwing-legacy\.com\/\?f=[^\s]+')
     yasb_url_match = yasb_url_pattern.search(message.content)
 
     # if "://xwing-legacy.com/?f" in message.content:
@@ -112,64 +110,41 @@ async def on_message(message):
         faction_pilots_dir = "xwing-data2/data/pilots" + xws_faction
         upgrades_dir = "xwing-data2/data/upgrades"
 
-        squad_list = ""
-        squad_list += (
-            str(xws_dict['faction']) +
-            ' [' +
-            str(xws_dict['points']) +
-            ']' +
-            '\n'
-        )
+    squad_list = ""
+    # squad_list += str(xws_dict['faction']) + ' [' + str(xws_dict['points']) + ']' + '\n'
+    squad_list += (
+        str(xws_dict['faction']) +
+        ' [' +
+        str(xws_dict['points']) +
+        ']' +
+        '\n'
+    )
 
-        if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
-            for item in xws_dict['pilots']:
-                if all(key in item for key in ["ship", "xws", "points", "upgrades"]):
-                    values = [item[key] for key in [
-                                    "ship",
-                                    "xws",
-                                    "points",
-                                    "upgrades"
-                            ]
-                    ]
-                    upgrades = []
-                    for upgrade_type, upgrade_list in item['upgrades'].items():
-                        # change upgrade to card name
-                        for upgrade in upgrade_list:
-                            for filename in os.listdir(faction_pilots_dir):
-                                if filename.endswith(".json"):
-                                    # Load the JSON data from the file
-                                    with open(os.path.join(upgrades_dir, filename), encoding='utf-8') as f:
-                                        data = json.load(f)
-                                    # Search for the xws value in the upgrades objects  
-                                    for obj in data:
-                                        if obj["xws"] == values[1]:
-                                            # Add name of the matching upgrade to the list
-                                            upgrade = str(obj["name"])   
-                                            upgrades.extend(upgrade)
-                    upgrades_str = ", ".join(upgrades)
-                    
-                    # change xws to card name
-                    for filename in os.listdir(faction_pilots_dir):
-                        if filename.endswith(".json"):
-                            # Load the JSON data from the file
-                            with open(os.path.join(faction_pilots_dir, filename), encoding='utf-8') as f:
-                                data = json.load(f)
-                            # Search for the xws value in the pilots array
-                            for pilot in data["pilots"]:
-                                if pilot["xws"] == values[1]:
-                                    # Print the name of the matching pilot
-                                    values[1] = str(pilot["name"])
+    if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
+        for item in xws_dict['pilots']:
+            # squad_list += str(item) + '\n'
+            if all(key in item for key in ["ship", "name", "points", "upgrades"]):
+                values = [item[key] for key in [
+                                "ship",
+                                "name",
+                                "points",
+                                "upgrades"
+                        ]
+                ]
+                upgrades = []
+                for upgrade_type, upgrade_list in item['upgrades'].items():
+                    upgrades.extend(upgrade_list)
+                upgrades_str = ", ".join(upgrades)
+                squad_list += f"{values[0]}, {values[1]}: {upgrades_str} [{values[2]}]\n"
 
-                    squad_list += f"{values[0]}, {values[1]}: {upgrades_str} [{values[2]}]\n"
+    lines = squad_list.splitlines()
 
-        lines = squad_list.splitlines()
+    converted_lines = [convert_xws(line) for line in lines]
+    converted_squad_list = "\n".join(converted_lines)
 
-        converted_lines = [convert_xws(line) for line in lines]
-        converted_squad_list = "\n".join(converted_lines)
+    lines = converted_squad_list.splitlines()
 
-        lines = converted_squad_list.splitlines()
-    
-    # Replace the first word of each line (starting with the second) with the ship emoji
+    # Replace the first word of each line (starting with the second) with the corresponding emoji
     for i in range(1, len(lines)):
         words = lines[i].split()
         ship_name = words[0].lower().replace(',', '')
