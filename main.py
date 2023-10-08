@@ -123,7 +123,7 @@ async def on_message(message):
 
         if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
             for item in xws_dict['pilots']:
-                if all(key in item for key in ["ship", "name", "points", "upgrades"]):
+                if all(key in item for key in ["ship", "xws", "points", "upgrades"]):
                     values = [item[key] for key in [
                                     "ship",
                                     "xws",
