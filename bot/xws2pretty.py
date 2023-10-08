@@ -30,13 +30,6 @@ def convert_xws(string):
 #     'tactical-relay':'Tactical Relay'
 
 
-# ship_emojis = {
-#     'tieinterceptor': '🛩️',
-#     'tiefighter': '🤖',
-#     'tiebomber': '🍕',
-#     # Add more ship names and emojis as needed
-# }
-
 ship_emojis = {
     "asf01bwing": "<:asf01bwing:1158007152250736711>",
     "arc170starfighter": "<:arc170starfighter:1158007149235019908>",

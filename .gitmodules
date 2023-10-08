@@ -5,4 +5,4 @@
 [submodule "submodules/xwing-data2"]
 	path = submodules/xwing-data2
 	url = git@github.com:SogeMoge/xwing-data2.git
-	branch = legacy
+	branch = feature/legacy
