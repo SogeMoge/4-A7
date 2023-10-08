@@ -107,7 +107,7 @@ async def on_message(message):
         xws_string = json.dumps(xws_raw.json())
         xws_dict = json.loads(xws_string)
         xws_faction = str(xws_dict['faction'])
-        faction_pilots_dir = "xwing-data2/data/pilots" + xws_faction
+        faction_pilots_dir = "xwing-data2/data/pilots/" + convert_faction_to_dir(xws_faction)
         upgrades_dir = "xwing-data2/data/upgrades"
 
     squad_list = ""
@@ -123,19 +123,43 @@ async def on_message(message):
     if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
         for item in xws_dict['pilots']:
             # squad_list += str(item) + '\n'
-            if all(key in item for key in ["ship", "name", "points", "upgrades"]):
+            if all(key in item for key in ["ship", "id", "points", "upgrades"]):
                 values = [item[key] for key in [
                                 "ship",
-                                "name",
+                                "id",
                                 "points",
                                 "upgrades"
                         ]
                 ]
                 upgrades = []
-                for upgrade_type, upgrade_list in item['upgrades'].items():
-                    upgrades.extend(upgrade_list)
-                upgrades_str = ", ".join(upgrades)
-                squad_list += f"{values[0]}, {values[1]}: {upgrades_str} [{values[2]}]\n"
+                for upgrade_type, upgrade in item['upgrades'].items():
+                    for filename in os.listdir(upgrades_dir):
+                        if filename.endswith(".json"):
+                            # Load the JSON data from the file
+                            with open(os.path.join(upgrades_dir, filename), encoding='UTF-8') as f:
+                                data = json.load(f)
+                            # Search for the xws value in the pilots array
+                            for upgrade_obj in data:
+                                if upgrade_obj["xws"] == ' '.join(map(str, upgrade)):
+                                    # Print the name of the matching pilot
+                                    upgrade = upgrade_obj["name"]
+                                    print(upgrade)
+                    upgrades.extend(upgrade.split(", "))
+                UPGRADES_STR = ", ".join(upgrades)
+                if values[0] in ship_emojis: # Replace the first word of each line (starting with the second) with the corresponding emoji
+                    values[0] = ship_emojis[values[0]]
+                if values[1]:
+                    for filename in os.listdir(faction_pilots_dir):
+                        if filename.endswith(".json"):
+                            # Load the JSON data from the file
+                            with open(os.path.join(faction_pilots_dir, filename), encoding='UTF-8') as f:
+                                data = json.load(f)
+                            # Search for the xws value in the pilots array
+                            for pilots_obj in data["pilots"]:
+                                if pilots_obj["xws"] == values[1]:
+                                    # Print the name of the matching pilot
+                                    values[1] = pilots_obj["name"]
+                squad_list += f"{values[0]} {values[1]}: {UPGRADES_STR} [{values[2]}]\n"
 
     lines = squad_list.splitlines()
 
@@ -143,16 +167,6 @@ async def on_message(message):
     converted_squad_list = "\n".join(converted_lines)
 
     lines = converted_squad_list.splitlines()
-
-    # Replace the first word of each line (starting with the second) with the corresponding emoji
-    for i in range(1, len(lines)):
-        words = lines[i].split()
-        ship_name = words[0].lower().replace(',', '')
-        print(ship_name)
-        if ship_name in ship_emojis:
-            words[0] = ship_emojis[ship_name]
-            print(words[0])
-        lines[i] = " ".join(words)
 
     # Join the lines back together into a single string
     converted_squad_list = "\n".join(lines)
