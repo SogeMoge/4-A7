@@ -19,6 +19,21 @@ def convert_xws(string):
     converted_words = [mapping.get(word.lower(), word) for word in words]
     return " ".join(converted_words)
 
+
+def convert_faction_to_dir(string):
+    """Convert xws faction name to xwing-data2 directories."""
+    mapping = {
+        'rebelalliance': 'rebel-alliance',
+        'galacticempire': 'galactic-empire',
+        'scumandvillainy': 'vcum-and-villainy',
+        'firstorder': 'first-order',
+        'resistance': 'resistance',
+        'galacticrepublic': 'galactic-republic',
+        'separatistalliance': 'separatist-alliance'
+    }
+    words = string.split()
+    converted_words = [mapping.get(word.lower(), word) for word in words]
+    return " ".join(converted_words)
 # exportObj.fromXWSUpgrade =
 #     'amd': 'Astromech'
 #     'astromechdroid': 'Astromech'
