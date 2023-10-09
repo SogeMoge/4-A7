@@ -65,6 +65,7 @@ async def on_message(message):
         return
     bot_has_message_permissions = message.guild and \
         message.channel.permissions_for(message.guild.me).manage_messages
+    # Parse message for YASB link
     yasb_url_pattern = re.compile(
         r'https?:\/\/xwing-legacy\.com\/\?f=[^\s]+')
     yasb_url_match = yasb_url_pattern.search(message.content)
@@ -78,16 +79,17 @@ async def on_message(message):
         # convert YASB link to XWS
         yasb_rb_url = RB_ENDPOINT + yasb_url
         xws_raw = requests.get(yasb_rb_url, timeout=10)
-
+        # Load xws json as a py dict
         xws_string = json.dumps(xws_raw.json())
         xws_dict = json.loads(xws_string)
+        # Get faction and pilots dir
         xws_faction = str(xws_dict['faction'])
         faction_pilots_dir = (
             "xwing-data2/data/pilots/"
             + convert_faction_to_dir(xws_faction)
         )
         upgrades_dir = "xwing-data2/data/upgrades"
-
+    # post Faction and total points on the first line
     squad_list = ""
     squad_list += (
         convert_xws(str(xws_dict['faction']))
@@ -97,6 +99,15 @@ async def on_message(message):
     )
 
     def get_upgrades_list(upgrades, upgrades_dir):
+        """Get list of upgrades per pilot.
+
+        Args:
+            upgrades (dict): upgrades dict from xws
+            upgrades_dir (str): upgrades dir in xwing-data2 repo
+
+        Returns:
+            str: list of upgrades
+        """
         upgrades_list = []
         if not isinstance(upgrades, dict):
             return upgrades_list
@@ -123,6 +134,15 @@ async def on_message(message):
         return upgrades_list
 
     def get_pilot_name(pilot_id, faction_pilots_dir):
+        """Get pilot name from xws.
+
+        Args:
+            pilot_id (str): pilot xws from yasb
+            faction_pilots_dir (str): pilots dir in xwing-data2 repo
+
+        Returns:
+            None: converts pilot xws to pilot name
+        """
         for filename in os.listdir(faction_pilots_dir):
             if filename.endswith(".json"):
                 with open(
@@ -139,9 +159,21 @@ async def on_message(message):
         return None
 
     def get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir):
+        """_summary_
+
+        Args:
+            xws_dict (dict): loaded json from Roll Better endpoint
+            upgrades_dir (str): upgrades dir in xwing-data2 repo
+            faction_pilots_dir (str): pilots dir in xwing-data2 repo
+
+        Returns:
+            str: multiline string of pilots and upgrades
+        """
         squad_list = ""
+        # Check if pilots is a list and iterate throught pilots
         if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
             for item in xws_dict['pilots']:
+                # Make sure nesessary keys are present
                 if all(key in item for key in ["ship", "id", "points", "upgrades"]):
                     values = [
                         item[key]
@@ -150,12 +182,11 @@ async def on_message(message):
                     upgrades_list = get_upgrades_list(values[3], upgrades_dir)
 
                     upgrades_str = ", ".join(upgrades_list)
-
+                    # Replace the first word of each line
+                    # (starting with the second) with emoji
                     if values[0] in ship_emojis:
-                        # Replace the first word of each line
-                        # (starting with the second) with emoji
                         values[0] = ship_emojis[values[0]]
-
+                    # Replace pilot xws with pilot name
                     pilot_name = get_pilot_name(values[1], faction_pilots_dir)
                     if pilot_name:
                         values[1] = pilot_name
@@ -171,9 +202,10 @@ async def on_message(message):
                             f"{values[0]} **{values[1]}** [{values[2]}]\n"
                         )
         return squad_list
-
+    # Get converted squad list
     squad_list = get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir)
 
+    # Post squad as a description in embed
     embed = discord.Embed(
         title=xws_dict['name'],
         colour=discord.Colour.random(),
