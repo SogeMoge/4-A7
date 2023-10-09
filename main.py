@@ -143,7 +143,7 @@ async def on_message(message):
                                     if upgrade_obj["xws"] == item:
                                         # Print the name of the matching pilot
                                         item = upgrade_obj["name"]
-                        upgrades_list.append(item)
+                        upgrades_list.insert(0, item)
                 UPGRADES_STR = ", ".join(upgrades_list)
                 if values[0] in ship_emojis: # Replace the first word of each line (starting with the second) with the corresponding emoji
                     values[0] = ship_emojis[values[0]]
