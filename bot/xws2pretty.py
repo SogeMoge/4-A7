@@ -5,10 +5,7 @@ def convert_xws(string):
     """Convert xws faction name to readable format."""
     mapping = {
         'rebelalliance': 'Rebel Alliance',
-        'rebels': 'Rebel Alliance',
-        'rebel': 'Rebel Alliance',
         'galacticempire': 'Galactic Empire',
-        'imperial': 'Galactic Empire',
         'scumandvillainy': 'Scum and Villainy',
         'firstorder': 'First Order',
         'resistance': 'Resistance',
@@ -34,16 +31,6 @@ def convert_faction_to_dir(string):
     words = string.split()
     converted_words = [mapping.get(word.lower(), word) for word in words]
     return " ".join(converted_words)
-# exportObj.fromXWSUpgrade =
-#     'amd': 'Astromech'
-#     'astromechdroid': 'Astromech'
-#     'ept': 'Talent'
-#     'elitepilottalent': 'Talent'
-#     'system': 'Sensor'
-#     'mod': 'Modification'
-#     'force-power':'Force'
-#     'tactical-relay':'Tactical Relay'
-
 
 ship_emojis = {
     "asf01bwing": "<:asf01bwing:1158007152250736711>",
