@@ -159,7 +159,7 @@ async def on_message(message):
                                     # Print the name of the matching pilot
                                     values[1] = pilots_obj["name"]
                 if len(UPGRADES_STR) > 0:
-                    squad_list += f"{values[0]} {values[1]}: {UPGRADES_STR} [{values[2]}]\n"
+                    squad_list += f"{values[0]} *{values[1]}*: {UPGRADES_STR} [{values[2]}]\n"
                 else:
                     squad_list += f"{values[0]} {values[1]} [{values[2]}]\n"
 
