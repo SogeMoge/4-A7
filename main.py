@@ -90,13 +90,6 @@ async def on_message(message):
         )
         upgrades_dir = "xwing-data2/data/upgrades"
     # post Faction and total points on the first line
-    squad_list = ""
-    squad_list += (
-        convert_xws(str(xws_dict['faction']))
-        + ' ['
-        + str(xws_dict['points'])
-        + ']\n'
-    )
 
     def get_upgrades_list(upgrades, upgrades_dir):
         """Get list of upgrades per pilot.
@@ -170,6 +163,12 @@ async def on_message(message):
             str: multiline string of pilots and upgrades
         """
         squad_list = ""
+        squad_list += (
+            convert_xws(str(xws_dict['faction']))
+            + ' ['
+            + str(xws_dict['points'])
+            + ']\n'
+        )
         # Check if pilots is a list and iterate throught pilots
         if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
             for item in xws_dict['pilots']:
