@@ -82,7 +82,10 @@ async def on_message(message):
         xws_string = json.dumps(xws_raw.json())
         xws_dict = json.loads(xws_string)
         xws_faction = str(xws_dict['faction'])
-        faction_pilots_dir = "xwing-data2/data/pilots/" + convert_faction_to_dir(xws_faction)
+        faction_pilots_dir = (
+            "xwing-data2/data/pilots/"
+            + convert_faction_to_dir(xws_faction)
+        )
         upgrades_dir = "xwing-data2/data/upgrades"
 
     squad_list = ""
@@ -93,73 +96,88 @@ async def on_message(message):
         + ']\n'
     )
 
-    if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
-        for item in xws_dict['pilots']:
-            # squad_list += str(item) + '\n'
-            if all(key in item for key in ["ship", "id", "points", "upgrades"]):
-                values = [
-                    item[key]
-                    for key in ["ship", "id", "points", "upgrades"]
-                ]
-                upgrades_list = []
-                if isinstance(item['upgrades'], dict):
-                    for upgrade_type, upgrade in item['upgrades'].items():
-                        for item in upgrade:
-                            for filename in os.listdir(upgrades_dir):
-                                if filename.endswith(".json"):
-                                    with open(
-                                        os.path.join(
-                                            upgrades_dir, filename
-                                        ),
-                                        encoding='UTF-8'
-                                    ) as f:
-                                        data = json.load(f)
-                                    for upgrade_obj in data:
-                                        if upgrade_obj["xws"] == item:
-                                            # Print the name of the matching pilot
-                                            item = upgrade_obj["name"]
-                            upgrades_list.insert(0, item)
+    def get_upgrades_list(upgrades, upgrades_dir):
+        upgrades_list = []
+        if not isinstance(upgrades, dict):
+            return upgrades_list
+
+        for upgrade_type, upgrade in upgrades.items():
+            for item in upgrade:
+                for filename in os.listdir(upgrades_dir):
+                    if not filename.endswith(".json"):
+                        continue
+
+                    with open(
+                        os.path.join(upgrades_dir, filename),
+                        encoding='UTF-8'
+                    ) as f:
+                        data = json.load(f)
+
+                    for upgrade_obj in data:
+                        if upgrade_obj["xws"] == item:
+                            item = upgrade_obj["name"]
+                            break
+
+                upgrades_list.insert(0, item)
+
+        return upgrades_list
+
+    def get_pilot_name(pilot_id, faction_pilots_dir):
+        for filename in os.listdir(faction_pilots_dir):
+            if filename.endswith(".json"):
+                with open(
+                    os.path.join(
+                        faction_pilots_dir, filename
+                    ),
+                    encoding='UTF-8'
+                ) as f:
+                    data = json.load(f)
+                # replace xws with the name of the pilot
+                for pilots_obj in data["pilots"]:
+                    if pilots_obj["xws"] == pilot_id:
+                        return pilots_obj["name"]
+        return None
+
+    def get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir):
+        squad_list = ""
+        if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
+            for item in xws_dict['pilots']:
+                if all(key in item for key in ["ship", "id", "points", "upgrades"]):
+                    values = [
+                        item[key]
+                        for key in ["ship", "id", "points", "upgrades"]
+                    ]
+                    upgrades_list = get_upgrades_list(values[3], upgrades_dir)
+
                     upgrades_str = ", ".join(upgrades_list)
+
                     if values[0] in ship_emojis:
-                        # Replace the first word of each line (starting with the second) with the corresponding emoji
+                        # Replace the first word of each line
+                        # (starting with the second) with emoji
                         values[0] = ship_emojis[values[0]]
-                    if values[1]:
-                        for filename in os.listdir(faction_pilots_dir):
-                            if filename.endswith(".json"):
-                                with open(
-                                    os.path.join(
-                                        faction_pilots_dir, filename
-                                    ),
-                                    encoding='UTF-8'
-                                ) as f:
-                                    data = json.load(f)
-                                for pilots_obj in data["pilots"]:
-                                    if pilots_obj["xws"] == values[1]:
-                                        values[1] = pilots_obj["name"]
+
+                    pilot_name = get_pilot_name(values[1], faction_pilots_dir)
+                    if pilot_name:
+                        values[1] = pilot_name
+
+                    # If there are upgrades, add them to the list
                     if len(upgrades_str) > 0:
                         squad_list += (
-                            f"{values[0]} **{values[1]}**: {upgrades_str} [{values[2]}]\n"
+                            f"{values[0]} **{values[1]}**: {upgrades_str} "
+                            f"[{values[2]}]\n"
                         )
                     else:
                         squad_list += (
                             f"{values[0]} **{values[1]}** [{values[2]}]\n"
                         )
+        return squad_list
 
-    # lines = squad_list.splitlines()
-
-    # converted_lines = [convert_xws(line) for line in lines]
-    # converted_squad_list = "\n".join(converted_lines)
-
-    # lines = converted_squad_list.splitlines()
-
-    # # Join the lines back together into a single string
-    # converted_squad_list = "\n".join(lines)
+    squad_list = get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir)
 
     embed = discord.Embed(
         title=xws_dict['name'],
         colour=discord.Colour.random(),
         url=yasb_url,
-        # description=converted_squad_list,
         description=squad_list,
     )
 
