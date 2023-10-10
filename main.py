@@ -193,12 +193,13 @@ async def on_message(message):
                     # If there are upgrades, add them to the list
                     if len(upgrades_str) > 0:
                         squad_list += (
-                            f"{values[0]} **{values[1]}**: {upgrades_str} "
-                            f"[{values[2]}]\n"
+                            f"{ship_emojis[values[0]]} **{values[1]}**: "
+                            f"{upgrades_str} [{values[2]}]\n"
                         )
                     else:
                         squad_list += (
-                            f"{values[0]} **{values[1]}** [{values[2]}]\n"
+                            f"{ship_emojis[values[0]]} **{values[1]}** "
+                            f"[{values[2]}]\n"
                         )
         return squad_list
     # Get converted squad list
