@@ -18,6 +18,7 @@ from discord.ui import Button, View
 # custom bot modules
 from bot.xws2pretty import convert_xws
 from bot.xws2pretty import ship_emojis
+from bot.xws2pretty import get_emoji
 from bot.xws2pretty import convert_faction_to_dir
 
 # fixes libgcc_s.so.1 must be installed for pthread_cancel to work
@@ -181,10 +182,10 @@ async def on_message(message):
                     upgrades_list = get_upgrades_list(values[3], upgrades_dir)
 
                     upgrades_str = ", ".join(upgrades_list)
-                    # Replace the first word of each line
-                    # (starting with the second) with emoji
-                    if values[0] in ship_emojis:
-                        values[0] = ship_emojis[values[0]]
+                    # # Replace the first word of each line
+                    # # (starting with the second) with emoji
+                    # if values[0] in ship_emojis:
+                    #     values[0] = ship_emojis[values[0]]
                     # Replace pilot xws with pilot name
                     pilot_name = get_pilot_name(values[1], faction_pilots_dir)
                     if pilot_name:
@@ -193,12 +194,12 @@ async def on_message(message):
                     # If there are upgrades, add them to the list
                     if len(upgrades_str) > 0:
                         squad_list += (
-                            f"{ship_emojis[values[0]]} **{values[1]}**: "
+                            f"{get_emoji(values[0])} **{values[1]}**: "
                             f"{upgrades_str} [{values[2]}]\n"
                         )
                     else:
                         squad_list += (
-                            f"{ship_emojis[values[0]]} **{values[1]}** "
+                            f"{get_emoji(values[0])} **{values[1]}** "
                             f"[{values[2]}]\n"
                         )
         return squad_list
