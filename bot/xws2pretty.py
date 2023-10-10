@@ -33,14 +33,6 @@ def convert_faction_to_dir(string):
     return " ".join(converted_words)
 
 
-def get_emoji(key):
-    """Convert ship xws to external emoji id."""
-    for ship_xws, value in ship_emojis.items():
-        if ship_xws == key:
-            return value
-    return None
-
-
 ship_emojis = {
     "asf01bwing": "<:asf01bwing:1158007152250736711>",
     "arc170starfighter": "<:arc170starfighter:1158007149235019908>",
