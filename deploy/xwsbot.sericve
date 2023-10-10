@@ -6,9 +6,9 @@ Before=poweroff.target halt.target shutdown.target
 [Service]
 Type=oneshot
 User=sogemoge
-WorkingDirectory=/opt/4-A7
-ExecStart=/opt/4-A7/podman-compose.sh up
-ExecStop=/opt/4-A7/podman-compose.sh down
+WorkingDirectory=/opt/4-A7/deploy
+ExecStart=/opt/4-A7/deploy/podman-compose.sh up
+ExecStop=/opt/4-A7/deploy/podman-compose.sh down
 RemainAfterExit=yes
 TimeoutStartSec=0
 TimeoutSec=3600

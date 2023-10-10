@@ -1,8 +1,7 @@
 version: "3"
 name: xwsbot
 services:
-
-  elobot:
+  xwsbot:
     image: docker.io/sogemoge/4-a7:latest
     container_name: inventory_droid
     environment:
@@ -11,15 +10,6 @@ services:
     ports:
       - 0.0.0.0:8081:801
     volumes:
-      # - type: bind
-      #   source: ./elo.db
-      #   target: /opt/4-A7/elo.db
       - type: bind
         source: ./.env
         target: /opt/4-A7/.env
-
-#    healthcheck:
-#      test: ["CMD", "curl", "127.0.0.1"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
