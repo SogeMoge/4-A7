@@ -1,7 +1,7 @@
 #!/bin/bash
 
 up() {
-    podman-compose pull
+    podman-compose -f docker-compose.maintenance.yml pull
     podman-compose -f docker-compose.maintenance.yml up -d
 }
 
