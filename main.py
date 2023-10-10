@@ -152,7 +152,7 @@ async def on_message(message):
         return None
 
     def get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir):
-        """_summary_
+        """Get yasb link and convert it to readable embed.
 
         Args:
             xws_dict (dict): loaded json from Roll Better endpoint

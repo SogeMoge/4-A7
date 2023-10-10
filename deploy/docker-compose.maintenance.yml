@@ -13,6 +13,4 @@ services:
       # - type: bind
       #   source: ./elo.db
       #   target: /opt/4-A7/elo.db
-      - type: bind
-        source: ./.env
-        target: /opt/4-A7-maintenance/.env
+      - /opt/4-A7-maintenance/.env:/opt/4-A7/.env:Z
