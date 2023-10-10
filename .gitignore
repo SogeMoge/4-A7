@@ -130,3 +130,11 @@ dmypy.json
 
 # VS Code
 .vscode/
+
+# PyCharm
+.idea/
+
+# misc
+/bot/helpful_todo
+/submodules/xwing-data2/scripts/legacy/*
+

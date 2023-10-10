@@ -1,0 +1,13 @@
+version: "3"
+name: xwsbot
+services:
+  xwsbot:
+    image: docker.io/sogemoge/4-a7:latest
+    container_name: inventory_droid
+    environment:
+      - COMPOSE_PROJECT_NAME
+    restart: always
+    ports:
+      - 0.0.0.0:8081:801
+    volumes:
+      - /opt/4-A7/.env:/opt/4-A7/.env:Z

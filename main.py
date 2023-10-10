@@ -1,235 +1,261 @@
-"""main bot file witt slash commands and events"""
+"""Main bot file witt slash commands and events."""
 # pylint: disable=wrong-import-position, consider-using-f-string, E0602:undefined-variable
 
-# https://stackoverflow.com/a/65908383
-# fixes libgcc_s.so.1 must be installed for pthread_cancel to work
 import ctypes
 
-libgcc_s = ctypes.CDLL("libgcc_s.so.1")
-
-# module for importing env variables
-from os import environ
-
-# import subprocess
-from datetime import date
-
-# modules for YASB link parsing
-# import json
-
-# from sqlite3 import Error
 import logging
+import json
+import re
+import os
+import asyncio
+import requests
+from dotenv import load_dotenv
 
 # pycord modules
 import discord
-
-# from discord.ext import commands
-# from discord.utils import get
-# from discord.commands import Option
-
-# from discord.commands import permissions
 from discord.ui import Button, View
 
-# import requests
-from dotenv import load_dotenv
-
 # custom bot modules
-import bot.parsing.squad2xws as xws
+from bot.xws2pretty import convert_xws
+from bot.xws2pretty import ship_emojis
+from bot.xws2pretty import get_emoji
+from bot.xws2pretty import convert_faction_to_dir
 
+# fixes libgcc_s.so.1 must be installed for pthread_cancel to work
+libgcc_s = ctypes.CDLL("libgcc_s.so.1")
 
-##### Configure logging #####
-logger = logging.getLogger("discord")
-logger.setLevel(logging.INFO)
-handler = logging.FileHandler(
-    filename="xwsbot.log", encoding="utf-8", mode="w"
-)
-handler.setFormatter(
-    logging.Formatter("%(asctime)s:%(levelname)s:%(name)s: %(message)s")
-)
-logger.addHandler(handler)
-
+# Configure logging
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler = logging.FileHandler('xwsbot.log')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 intents = discord.Intents().all()
 bot = discord.Bot(intents=intents)
 
-#### Load .env vars and discord token"
+# Load .env vars and discord token
 load_dotenv()
-token = environ.get("DISCORD_TOKEN")
+token = os.environ.get("DISCORD_TOKEN")
 
-##### YASB PARSING VARS #####
-GITHUB_USER = "Gan0n29"
-GITHUB_BRANCH = "xwing-legacy"
-BASE_URL = (
-    f"https://raw.githubusercontent.com/{GITHUB_USER}"
-    "/ttt-xwing-overlay/{GITHUB_BRANCH}/src/assets/plugins/xwing-data2/"
+# Prefix url for squad 2 xws conversion
+RB_ENDPOINT = (
+    """ https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy? """
 )
-MANIFEST = "data/manifest.json"
-CHECK_FREQUENCY = 900  # 15 minutes
-##### YASB PARSING WARS #####
 
-UPDATE_REACTION = "\U0001f504"  # circle arrows
-accept_reactions = ["\U00002705", "\U0000274e"]  # check and cross marks
-date = date.today()
-
-#########################                 #########################
-#########################     EVENTS      #########################
-#########################                 #########################
+#  #########################
+#  EVENTS
+#  #########################
 
 
 @bot.event
 async def on_ready():
-    """on_ready console message"""
-    bot.add_view(UpdateView())
-    print(f"{bot.user} is ready!")
+    """Send on_ready console message."""
+    print(f"{bot.user} is operational! Roger? Roger!")
 
 
-#########################                 #########################
-####################  LEGACY BUILDER PARSING ######################
-#########################                 #########################
+#  #########################
+#  LEGACY BUILDER PARSING
+#  #########################
 
 
 @bot.event
 async def on_message(message):
-    """parse legacy-yasb link to post embed list"""
+    """Parse legacy-yasb link to post embed list."""
     if message.author.bot:  # check that author is not the bot itself
         return
+    bot_has_message_permissions = message.guild and \
+        message.channel.permissions_for(message.guild.me).manage_messages
+    # Parse message for YASB link
+    yasb_url_pattern = re.compile(
+        r'https?:\/\/xwing-legacy\.com\/\?f=[^\s]+')
+    yasb_url_match = yasb_url_pattern.search(message.content)
 
-    if "://xwing-legacy.com/?f" in message.content:
+    # if "://xwing-legacy.com/?f" in message.content:
+    if yasb_url_match:
+        yasb_url = yasb_url_match.group(0)
+        yasb_url = yasb_url.replace('http://', 'https://')
         yasb_channel = message.channel
 
         # convert YASB link to XWS
-        yasb_link = message.content
-        xws_raw = xws.convert_to_xws(yasb_link)
-    await yasb_channel.send(xws_raw)
+        yasb_rb_url = RB_ENDPOINT + yasb_url
+        xws_raw = requests.get(yasb_rb_url, timeout=10)
+        # Load xws json as a py dict
+        xws_string = json.dumps(xws_raw.json())
+        xws_dict = json.loads(xws_string)
+        # Get faction and pilots dir
+        xws_faction = str(xws_dict['faction'])
+        faction_pilots_dir = (
+            "xwing-data2/data/pilots/"
+            + convert_faction_to_dir(xws_faction)
+        )
+        upgrades_dir = "xwing-data2/data/upgrades"
+    # post Faction and total points on the first line
+
+    def get_upgrades_list(upgrades, upgrades_dir):
+        """Get list of upgrades per pilot.
+
+        Args:
+            upgrades (dict): upgrades dict from xws
+            upgrades_dir (str): upgrades dir in xwing-data2 repo
+
+        Returns:
+            str: list of upgrades
+        """
+        upgrades_list = []
+        if not isinstance(upgrades, dict):
+            return upgrades_list
+
+        for upgrade_type, upgrade in upgrades.items():
+            for item in upgrade:
+                for filename in os.listdir(upgrades_dir):
+                    if not filename.endswith(".json"):
+                        continue
+
+                    with open(
+                        os.path.join(upgrades_dir, filename),
+                        encoding='UTF-8'
+                    ) as f:
+                        data = json.load(f)
+
+                    for upgrade_obj in data:
+                        if upgrade_obj["xws"] == item:
+                            item = upgrade_obj["name"]
+                            break
+
+                upgrades_list.insert(0, item)
+
+        return upgrades_list
+
+    def get_pilot_name(pilot_id, faction_pilots_dir):
+        """Get pilot name from xws.
+
+        Args:
+            pilot_id (str): pilot xws from yasb
+            faction_pilots_dir (str): pilots dir in xwing-data2 repo
+
+        Returns:
+            None: converts pilot xws to pilot name
+        """
+        for filename in os.listdir(faction_pilots_dir):
+            if filename.endswith(".json"):
+                with open(
+                    os.path.join(
+                        faction_pilots_dir, filename
+                    ),
+                    encoding='UTF-8'
+                ) as f:
+                    data = json.load(f)
+                # replace xws with the name of the pilot
+                for pilots_obj in data["pilots"]:
+                    if pilots_obj["xws"] == pilot_id:
+                        return pilots_obj["name"]
+        return None
+
+    def get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir):
+        """Get yasb link and convert it to readable embed.
+
+        Args:
+            xws_dict (dict): loaded json from Roll Better endpoint
+            upgrades_dir (str): upgrades dir in xwing-data2 repo
+            faction_pilots_dir (str): pilots dir in xwing-data2 repo
+
+        Returns:
+            str: multiline string of pilots and upgrades
+        """
+        squad_list = ""
+        squad_list += (
+            convert_xws(str(xws_dict['faction']))
+            + ' ['
+            + str(xws_dict['points'])
+            + ']\n'
+        )
+        # Check if pilots is a list and iterate throught pilots
+        if 'pilots' in xws_dict and isinstance(xws_dict['pilots'], list):
+            for item in xws_dict['pilots']:
+                # Make sure nesessary keys are present
+                if all(key in item for key in ["ship", "id", "points", "upgrades"]):
+                    values = [
+                        item[key]
+                        for key in ["ship", "id", "points", "upgrades"]
+                    ]
+                    upgrades_list = get_upgrades_list(values[3], upgrades_dir)
+
+                    upgrades_str = ", ".join(upgrades_list)
+                    # # Replace the first word of each line
+                    # # (starting with the second) with emoji
+                    # if values[0] in ship_emojis:
+                    #     values[0] = ship_emojis[values[0]]
+                    # Replace pilot xws with pilot name
+                    pilot_name = get_pilot_name(values[1], faction_pilots_dir)
+                    if pilot_name:
+                        values[1] = pilot_name
+
+                    # If there are upgrades, add them to the list
+                    if len(upgrades_str) > 0:
+                        squad_list += (
+                            f"{ship_emojis.get(values[0])} **{values[1]}**: "
+                            f"{upgrades_str} [{values[2]}]\n"
+                        )
+                    else:
+                        squad_list += (
+                            f"{ship_emojis.get(values[0])} **{values[1]}** "
+                            f"[{values[2]}]\n"
+                        )
+        return squad_list
+    # Get converted squad list
+    squad_list = get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir)
+
+    # Post squad as a description in embed
+    embed = discord.Embed(
+        title=xws_dict['name'],
+        colour=discord.Colour.random(),
+        url=yasb_url,
+        description=squad_list,
+    )
+
+    embed.set_footer(
+        text=message.author.display_name,
+        icon_url=message.author.display_avatar,
+    )
+
+    await yasb_channel.send(embed=embed)
+
+    # allow the user to delete their query message
+    if bot_has_message_permissions:
+        prompt_delete_previous_message = await message.channel.send("Delete your message?")
+        await prompt_delete_previous_message.add_reaction("✅")
+        await prompt_delete_previous_message.add_reaction("❌")
+        try:
+            reaction, user = await bot.wait_for(
+                event="reaction_add",
+                timeout=10,
+                check=lambda reaction, user: user == message.author
+            )
+            if str(reaction.emoji) == "✅":
+                await message.delete()
+                await prompt_delete_previous_message.delete()
+                return
+            if str(reaction.emoji) == "❌":
+                await prompt_delete_previous_message.delete()
+                return
+        except asyncio.TimeoutError:
+            await prompt_delete_previous_message.delete()
+            return
 
 
-# @bot.event
-# async def on_message(message):
-#     """parse legacy-yasb link to post embed list"""
-#     if message.author.bot:  # check that author is not the bot itself
-#         return
-
-#     if "://xwing-legacy.com/?f" in message.content:
-#         yasb_channel = message.channel
-
-#         # convert YASB link to XWS
-#         yasb_link = message.content
-#         # print(f"1) yasb_link = {yasb_link}")
-#         yasb_convert = yasb_link.replace(
-#             "://xwing-legacy.com/",
-#             "://squad2xws.herokuapp.com/yasb/xws",
-#         )
-#         # print(f"2) yasb_convert = {yasb_convert}")
-#         yasb_xws = requests.get(yasb_convert, timeout=10)
-#         # print(f"3) yasb_xws = {yasb_xws}")
-#         #############
-#         # don't know if it works at all???
-#         # yasb_xws = unescape(yasb_xws) # delete all characters which prevents proper parsing
-
-#         yasb_json = yasb_xws.json()  # raw XWS in JSON
-#         # print(f"4) yasb_json = {yasb_json}")
-#         yasb_json = json.dumps(
-#             yasb_json
-#         )  # convert single quotes to double quotes
-#         # print(f"5) yasb_json = {yasb_json}")
-#         yasb_dict = json.loads(
-#             yasb_json
-#         )  # convert JSON to python object
-#         # print(f"6) yasb_dict = {yasb_dict}")
-#         #############
-#         for (
-#             key,
-#             value,
-#         ) in (
-#             yasb_dict.items()
-#         ):  # add embed title with list name as hyperlink
-#             if key in ["name"]:
-#                 embed = discord.Embed(
-#                     title=value,
-#                     colour=discord.Colour.random(),
-#                     url=message.content,
-#                     description="YASB Legacy 2.0 list",
-#                 )
-#         try:  # use custom name for squads with default name from yasb
-#             embed
-#         except NameError:
-#             embed = discord.Embed(
-#                 title="Infamous Squadron",
-#                 colour=discord.Colour.random(),
-#                 url=message.content,
-#                 description="YASB Legacy 2.0 list",
-#             )
-
-#         embed.set_footer(
-#             text=message.author.display_name,
-#             icon_url=message.author.display_avatar,
-#         )
-
-#         ####### TO DO ######## compare parsed results to data in xwing-data manifest
-#         # # get JSON manifest from ttt-xwing-overlay repo
-#         # manifest_link = requests.get(BASE_URL + MANIFEST)
-#         # manifest = manifest_link.json()
-
-#         # files = (
-#         #     manifest['damagedecks'] +
-#         #     manifest['upgrades'] +
-#         #     [manifest['conditions']] +
-#         #     [ship for faction in manifest['pilots']
-#         #         for ship in faction['ships']]
-#         # )
-
-#         # _data = {}
-#         # loop = asyncio.get_event_loop()
-#         # # get JSON manifest from ttt-xwing-overlay repo
-#         ####### TO DO ######## compare parsed results to data in xwing-data manifest
-
-#     for (
-#         key,
-#         value,
-#     ) in (
-#         yasb_dict.items()
-#     ):  # add embed fields with faction and list name
-#         if key in ["faction"]:
-#             embed.add_field(name=key, value=value, inline=True)
-
-#     pilots_total = len(yasb_dict["pilots"])
-
-#     for pilot in range(
-#         pilots_total
-#     ):  # add embed fields for each pilot in a list
-#         embed.add_field(
-#             name=yasb_dict["pilots"][pilot]["id"],
-#             # value=list(yasb_dict["pilots"][pilot]["upgrades"].values()),
-#             value=re.sub(
-#                 r"[\[\]\']",
-#                 "\u200b",
-#                 str(
-#                     list(
-#                         yasb_dict["pilots"][pilot]["upgrades"].values()
-#                     )
-#                 ),
-#             ),
-#             inline=False,
-#         )
-#     await yasb_channel.send(embed=embed)
-#     await message.delete()
-
-
-# http://xwing-legacy.com/ -> http://squad2xws.herokuapp.com/yasb/xws
-# http://xwing-legacy.com/?f=Separatist%20Alliance&d=v8ZsZ200Z305X115WW207W229Y356X456W248Y542XW470WW367WY542XW470WW367W&sn=Royal%20escort&obs=
-
-#########################                 #########################
-#########################  INFO COMMANDS  #########################
-#########################                 #########################
-
+#  #########################
+# INFO COMMANDS
+#  #########################
 
 @bot.slash_command(
     # guild_ids=[test_guild_id, russian_guild_id]
 )  # create a slash command for the supplied guilds
 async def rules(ctx):
-    """X-Wing 2.0 Legacy rules"""
-
+    """Post X-Wing 2.0 Legacy rules url."""
     button1 = Button(
         label="X-Wing 2.0 Legacy rules",
-        url="https://x2po.org/rules%2C-points%2C-%26-faq-1",
+        url="https://x2po.org/standard",
     )
     view = View(button1)
     await ctx.respond("Rules:", view=view)
@@ -239,8 +265,7 @@ async def rules(ctx):
     # guild_ids=[test_guild_id, russian_guild_id]
 )  # create a slash command for the supplied guilds
 async def builders(ctx):
-    """Squad Builders for X-Wing from comunity"""
-
+    """Post Squad Builders for X-Wing from community."""
     button1 = Button(
         label="YASB 2.0 Legacy", url="https://xwing-legacy.com/"
     )
@@ -250,6 +275,5 @@ async def builders(ctx):
     )
     view = View(button1, button2)
     await ctx.respond("Squad Builders:", view=view)
-
 
 bot.run(token)

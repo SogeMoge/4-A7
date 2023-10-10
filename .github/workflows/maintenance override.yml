@@ -1,4 +1,4 @@
-name: Manual override
+name: Manual maintenance override
 
 on: workflow_dispatch
 
@@ -18,4 +18,4 @@ jobs:
           script: |
             eval "$(ssh-agent -s)"
             ssh-add /opt/.ssh/github
-            sudo systemctl restart xwsbot
+            sudo systemctl restart xwsbot-maintenance

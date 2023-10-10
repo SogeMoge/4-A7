@@ -1,0 +1,16 @@
+version: "3"
+name: xwsbot-maintenance
+services:
+  xwsbot:
+    image: docker.io/sogemoge/4-a7-maintenance:latest
+    container_name: inventory_droid_on_maintenance
+    environment:
+      - COMPOSE_PROJECT_NAME
+    restart: always
+    ports:
+      - 0.0.0.0:8091:801
+    volumes:
+      # - type: bind
+      #   source: ./elo.db
+      #   target: /opt/4-A7/elo.db
+      - /opt/4-A7-maintenance/.env:/opt/4-A7/.env:Z
