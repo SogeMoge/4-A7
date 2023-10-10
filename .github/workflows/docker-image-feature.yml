@@ -2,8 +2,8 @@ name: Docker Image CI maintenance
 
 on:
   push:
-    branches:
-      - "feature/*"
+    branches-ignore:
+      - master
 
 jobs:
   build_and_deploy:
