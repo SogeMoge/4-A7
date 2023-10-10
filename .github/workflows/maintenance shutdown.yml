@@ -1,0 +1,21 @@
+name: Manual maintenance override
+
+on: workflow_dispatch
+
+jobs:
+  reboot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Contingency protocol
+        uses: cross-the-world/ssh-pipeline@master
+        with:
+          host: ${{ secrets.DC_HOST }}
+          user: ${{ secrets.DC_USER }}
+          key: ${{ secrets.DC_KEY }}
+          pass: ${{ secrets.DC_PASS }}
+          port: ${{ secrets.DC_PORT }}
+          connect_timeout: 10s
+          script: |
+            eval "$(ssh-agent -s)"
+            ssh-add /opt/.ssh/github
+            sudo systemctl stop xwsbot-maintenance
