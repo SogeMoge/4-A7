@@ -1,4 +1,4 @@
-name: Manual maintenance override
+name: Manual maintenance shutdown
 
 on: workflow_dispatch
 

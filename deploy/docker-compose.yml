@@ -11,3 +11,4 @@ services:
       - 0.0.0.0:8081:801
     volumes:
       - /opt/4-A7/.env:/opt/4-A7/.env:Z
+      - /opt/4-A7/submodules/xwing-data2:/opt/4-A7/xwing-data2
