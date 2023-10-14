@@ -10,7 +10,5 @@ services:
     ports:
       - 0.0.0.0:8091:801
     volumes:
-      # - type: bind
-      #   source: ./elo.db
-      #   target: /opt/4-A7/elo.db
       - /opt/4-A7-maintenance/.env:/opt/4-A7/.env:Z
+      - /opt/4-A7-maintenance/submodules/xwing-data2:/opt/4-A7/xwing-data2
