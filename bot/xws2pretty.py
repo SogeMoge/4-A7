@@ -4,32 +4,36 @@
 def convert_xws(string):
     """Convert xws faction name to readable format."""
     mapping = {
-        'rebelalliance': 'Rebel Alliance',
-        'galacticempire': 'Galactic Empire',
-        'scumandvillainy': 'Scum and Villainy',
-        'firstorder': 'First Order',
-        'resistance': 'Resistance',
-        'galacticrepublic': 'Galactic Republic',
-        'separatistalliance': 'Separatist Alliance'
+        "rebelalliance": "Rebel Alliance",
+        "galacticempire": "Galactic Empire",
+        "scumandvillainy": "Scum and Villainy",
+        "firstorder": "First Order",
+        "resistance": "Resistance",
+        "galacticrepublic": "Galactic Republic",
+        "separatistalliance": "Separatist Alliance",
     }
     words = string.split()
-    converted_words = [mapping.get(word.lower(), word) for word in words]
+    converted_words = [
+        mapping.get(word.lower(), word) for word in words
+    ]
     return " ".join(converted_words)
 
 
 def convert_faction_to_dir(string):
     """Convert xws faction name to xwing-data2 directories."""
     mapping = {
-        'rebelalliance': 'rebel-alliance',
-        'galacticempire': 'galactic-empire',
-        'scumandvillainy': 'vcum-and-villainy',
-        'firstorder': 'first-order',
-        'resistance': 'resistance',
-        'galacticrepublic': 'galactic-republic',
-        'separatistalliance': 'separatist-alliance'
+        "rebelalliance": "rebel-alliance",
+        "galacticempire": "galactic-empire",
+        "scumandvillainy": "scum-and-villainy",
+        "firstorder": "first-order",
+        "resistance": "resistance",
+        "galacticrepublic": "galactic-republic",
+        "separatistalliance": "separatist-alliance",
     }
     words = string.split()
-    converted_words = [mapping.get(word.lower(), word) for word in words]
+    converted_words = [
+        mapping.get(word.lower(), word) for word in words
+    ]
     return " ".join(converted_words)
 
 
@@ -122,5 +126,5 @@ ship_emojis = {
     "laatigunship": "<:laatigunship:1158007322107457596>",
     "nimbusclassvwing": "<:nimbusclassvwing:1158007373315719249>",
     "syliureclasshyperspacering": "<:syliureclasshyperspacering:1158007498113032263>",
-    "clonez95headhunter": "<:clonez95headhunter:1158007204285251715>"
+    "clonez95headhunter": "<:clonez95headhunter:1158007204285251715>",
 }
