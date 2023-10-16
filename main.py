@@ -120,7 +120,17 @@ async def on_message(message):
         yasb_rb_url = RB_ENDPOINT + yasb_url
         xws_raw = requests.get(yasb_rb_url, timeout=10)
         # Load xws json as a py dict
-        xws_string = json.dumps(xws_raw.json())
+        try:
+            xws_string = json.dumps(xws_raw.json())
+        except Exception as e:
+            logger.error(
+                f"Transmission failed, wrong URL: {e}",
+                extra={
+                    "yasb_url": yasb_url,
+                    "squad_list": None,
+                    "username": message.author.name,
+                },
+            )
         xws_dict = json.loads(xws_string)
         # Get faction and pilots dir
         xws_faction = str(xws_dict["faction"])
