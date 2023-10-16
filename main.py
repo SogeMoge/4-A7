@@ -268,7 +268,7 @@ async def on_message(message):
             f"Transmission failed: {e}",
             extra={
                 "yasb_url": yasb_url,
-                "squad_list": "none",
+                "squad_list": None,
                 "username": message.author.name,
             },
         )
