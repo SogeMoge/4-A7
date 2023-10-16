@@ -5,6 +5,7 @@ import ctypes
 
 import logging
 import json
+import datetime
 import re
 import os
 import asyncio
@@ -43,7 +44,10 @@ class JsonFormatter(logging.Formatter):
 
         """
         log_dict = {
-            "timestamp": record.created,
+            "timestamp": datetime.datetime.fromtimestamp(
+                record.created
+            ).strftime("%Y-%m-%d %H:%M:%S"),
+            "unix_timestamp": record.created,
             "level": record.levelname,
             "message": record.getMessage(),
             "yasb_url": record.yasb_url,
@@ -283,15 +287,6 @@ async def on_message(message):
     )
 
     await yasb_channel.send(embed=embed)
-
-    logger.info(
-        "Incoming YASB link",
-        extra={
-            "yasb_url": yasb_url,
-            "squad_list": squad_list,
-            "username": message.author.name,
-        },
-    )
 
     # allow the user to delete their query message
     if bot_has_message_permissions:
