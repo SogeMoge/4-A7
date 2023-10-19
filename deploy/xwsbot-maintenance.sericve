@@ -1,5 +1,6 @@
 [Unit]
 Description=Podman management service for xwsbot-maintenance
+Before=poweroff.target halt.target shutdown.target
 
 [Service]
 Type=oneshot
@@ -12,4 +13,4 @@ TimeoutStartSec=0
 TimeoutSec=3600
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=shutdown.target halt.target
