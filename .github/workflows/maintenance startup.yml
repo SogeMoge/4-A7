@@ -1,4 +1,4 @@
-name: Manual override
+name: Manual maintenance startup
 
 on: workflow_dispatch
 
@@ -18,7 +18,4 @@ jobs:
           script: |
             eval "$(ssh-agent -s)"
             ssh-add /opt/.ssh/github
-            cd /opt/4-A7 && git fetch && git checkout master && git pull
-            git submodule update --init --recursive
-            systemctl --user stop 'podman-compose@xwsbot'
-            systemctl --user start 'podman-compose@xwsbot'
+            sudo systemctl start xwsbot-maintenance
