@@ -26,9 +26,13 @@ with open("xwsbot.log", "r") as f:
             username_counts[log_dict["username"]] += 1
 
 # Print the info counts by month
+print("###### INFO counts by month:")
 for month, count in info_counts.items():
     print(f"{month}: {count} INFO entries")
 
+print("\n###### Event counts by user:")
 # Print the username counts (excluding "sogemoge")
+user_count = 0
 for username, count in username_counts.items():
-    print(f"{username}: {count} entries")
+    user_count += 1
+    print(f"{user_count}. {username}: {count} entries")
