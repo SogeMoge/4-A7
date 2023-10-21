@@ -107,7 +107,8 @@ async def on_message(message):
     )
     # Parse message for YASB link
     yasb_url_pattern = re.compile(
-        r"https?:\/\/xwing-legacy\.com\/\?f=[^\s]+"
+        # r"https?:\/\/xwing-legacy\.com\/\?f=[^\s]+"
+        r"https?:\/\/xwing-legacy\.com\/(preview)?\/?\?f=[^\s]+"
     )
     yasb_url_match = yasb_url_pattern.search(message.content)
 
