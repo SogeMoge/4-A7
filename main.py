@@ -199,9 +199,7 @@ async def on_message(message):
                 # replace xws with the name of the pilot
                 for pilots_obj in data["pilots"]:
                     if pilots_obj["xws"] == pilot_id:
-                        name = pilots_obj["name"]
-                        cost = pilots_obj["cost"]
-        return name, cost
+                        return pilots_obj["name"], pilots_obj["cost"]
         # return None
 
     def get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir):
