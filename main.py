@@ -169,9 +169,14 @@ async def on_message(message):
 
                     for upgrade_obj in data:
                         if upgrade_obj["xws"] == item:
+                            # add hyperlink to goldenrod project
                             upgrade_obj[
                                 "name"
-                            ] += f"*({upgrade_obj['cost']['value']})*"
+                            ] = f"[{upgrade_obj['name']}](https://github.com/SogeMoge/x-wing2.0-project-goldenrod/blob/2.0/src/images/En/upgrades/{upgrade_obj['xws']}.png)"
+                            # add cost
+                            upgrade_obj[
+                                "name"
+                            ] += f"({upgrade_obj['cost']['value']})"
                             item = upgrade_obj["name"]
                             break
 
@@ -258,13 +263,13 @@ async def on_message(message):
                     # If there are upgrades, add them to the list
                     if len(upgrades_str) > 0:
                         squad_list += (
-                            f"{ship_emojis.get(values[0])} **{values[1]}**"
+                            f"{ship_emojis.get(values[0])} **{values[1]}**: "
                             # f"*[{pilot_cost}]*: "
                             f"{upgrades_str} [{values[2]}]\n"
                         )
                     else:
                         squad_list += (
-                            f"{ship_emojis.get(values[0])} **{values[1]}**"
+                            f"{ship_emojis.get(values[0])} **{values[1]}** "
                             # f"*[{pilot_cost}]* "
                             f"[{values[2]}]\n"
                         )
