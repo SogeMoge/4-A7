@@ -111,6 +111,13 @@ async def on_message(message):
     )
     yasb_url_match = yasb_url_pattern.search(message.content)
 
+    # Assign values to vars bedore referensing
+    yasb_url = (
+        "https://xwing-legacy.com/?f=Rebel%20Alliance&d=v8ZsZ200Z"
+        "&sn=Something%20went%20wrong&obs="
+    )
+    xws_dict = {}
+
     # if "://xwing-legacy.com/?f" in message.content:
     if yasb_url_match:
         yasb_url = yasb_url_match.group(0)
