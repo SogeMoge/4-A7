@@ -20,6 +20,7 @@ from discord.ui import Button, View
 from bot.xws2pretty import convert_xws
 from bot.xws2pretty import ship_emojis
 from bot.xws2pretty import convert_faction_to_dir
+from bot.xws2pretty import convert_faction_to_color
 
 # fixes libgcc_s.so.1 must be installed for pthread_cancel to work
 libgcc_s = ctypes.CDLL("libgcc_s.so.1")
@@ -134,6 +135,7 @@ async def on_message(message):
         xws_dict = json.loads(xws_string)
         # Get faction and pilots dir
         xws_faction = str(xws_dict["faction"])
+        faction_color = convert_faction_to_color(xws_faction)
         faction_pilots_dir = (
             "xwing-data2/data/pilots/"
             + convert_faction_to_dir(xws_faction)
@@ -272,7 +274,7 @@ async def on_message(message):
         # Post squad as a description in embed
         embed = discord.Embed(
             title=xws_dict["name"],
-            colour=discord.Colour.random(),
+            colour=faction_color,
             url=yasb_url,
             description=squad_list,
         )

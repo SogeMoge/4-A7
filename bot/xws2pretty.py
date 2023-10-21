@@ -37,6 +37,23 @@ def convert_faction_to_dir(string):
     return " ".join(converted_words)
 
 
+def convert_faction_to_color(string):
+    """Convert xws faction name to embed color."""
+    color_map = {
+        "rebelalliance": "cb120e",
+        "galacticempire": "d6d6dd",
+        "scumandvillainy": "253a21",
+        "firstorder": "b42828",
+        "resistance": "d87325",
+        "galacticrepublic": "eff3f3",
+        "separatistalliance": "20308d",
+    }
+    color_code = color_map.get(string.lower(), "000000")
+    color = discord.Colour(f"0x{color_code}")
+
+    return color
+
+
 ship_emojis = {
     "asf01bwing": "<:asf01bwing:1158007152250736711>",
     "arc170starfighter": "<:arc170starfighter:1158007149235019908>",
