@@ -49,7 +49,7 @@ def convert_faction_to_color(string):
         "separatistalliance": "20308d",
     }
     color_code = color_map.get(string.lower(), "000000")
-    color = discord.Colour(f"0x{color_code}")
+    color = discord.Color(f"0x{color_code}")
 
     return color
 
