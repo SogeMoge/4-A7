@@ -199,8 +199,12 @@ async def on_message(message):
                 # replace xws with the name of the pilot
                 for pilots_obj in data["pilots"]:
                     if pilots_obj["xws"] == pilot_id:
-                        return pilots_obj["name"], pilots_obj["cost"]
-        # return None
+                        # return pilots_obj["name"], pilots_obj["cost"]
+                        pilots_obj[
+                            "name"
+                        ] += f"*({pilots_obj['cost']})*"
+                        return pilots_obj["name"]
+        return None
 
     def get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir):
         """Get yasb link and convert it to readable embed.
@@ -244,7 +248,8 @@ async def on_message(message):
                     # if values[0] in ship_emojis:
                     #     values[0] = ship_emojis[values[0]]
                     # Replace pilot xws with pilot name
-                    pilot_name, pilot_cost = get_pilot_name(
+                    # pilot_name, pilot_cost = get_pilot_name(
+                    pilot_name = get_pilot_name(
                         values[1], faction_pilots_dir
                     )
                     if pilot_name:
@@ -254,13 +259,13 @@ async def on_message(message):
                     if len(upgrades_str) > 0:
                         squad_list += (
                             f"{ship_emojis.get(values[0])} **{values[1]}**"
-                            f"*[{pilot_cost}]*: "
+                            # f"*[{pilot_cost}]*: "
                             f"{upgrades_str} [{values[2]}]\n"
                         )
                     else:
                         squad_list += (
                             f"{ship_emojis.get(values[0])} **{values[1]}**"
-                            f"*[{pilot_cost}]* "
+                            # f"*[{pilot_cost}]* "
                             f"[{values[2]}]\n"
                         )
         return squad_list
@@ -270,6 +275,21 @@ async def on_message(message):
         squad_list = get_squad_list(
             xws_dict, upgrades_dir, faction_pilots_dir
         )
+        # Post squad as a description in embed
+        embed = discord.Embed(
+            title=xws_dict["name"],
+            colour=discord.Colour.random(),
+            url=yasb_url,
+            description=squad_list,
+        )
+
+        embed.set_footer(
+            text=message.author.display_name,
+            icon_url=message.author.display_avatar,
+        )
+
+        await yasb_channel.send(embed=embed)
+
         logger.info(
             "Incoming YASB link",
             extra={
@@ -278,6 +298,30 @@ async def on_message(message):
                 "username": message.author.name,
             },
         )
+        # allow the user to delete their query message
+        if bot_has_message_permissions:
+            prompt_delete_previous_message = await message.channel.send(
+                "Delete your message?"
+            )
+            await prompt_delete_previous_message.add_reaction("✅")
+            await prompt_delete_previous_message.add_reaction("❌")
+            try:
+                reaction, user = await bot.wait_for(
+                    event="reaction_add",
+                    timeout=10,
+                    check=lambda reaction, user: user == message.author,
+                )
+                if str(reaction.emoji) == "✅":
+                    await message.delete()
+                    await prompt_delete_previous_message.delete()
+                    return
+                if str(reaction.emoji) == "❌":
+                    await prompt_delete_previous_message.delete()
+                    return
+            except asyncio.TimeoutError:
+                await prompt_delete_previous_message.delete()
+                return
+
     except Exception as e:
         logger.error(
             f"Transmission failed: {e}",
@@ -287,45 +331,6 @@ async def on_message(message):
                 "username": message.author.name,
             },
         )
-
-    # Post squad as a description in embed
-    embed = discord.Embed(
-        title=xws_dict["name"],
-        colour=discord.Colour.random(),
-        url=yasb_url,
-        description=squad_list,
-    )
-
-    embed.set_footer(
-        text=message.author.display_name,
-        icon_url=message.author.display_avatar,
-    )
-
-    await yasb_channel.send(embed=embed)
-
-    # allow the user to delete their query message
-    if bot_has_message_permissions:
-        prompt_delete_previous_message = await message.channel.send(
-            "Delete your message?"
-        )
-        await prompt_delete_previous_message.add_reaction("✅")
-        await prompt_delete_previous_message.add_reaction("❌")
-        try:
-            reaction, user = await bot.wait_for(
-                event="reaction_add",
-                timeout=10,
-                check=lambda reaction, user: user == message.author,
-            )
-            if str(reaction.emoji) == "✅":
-                await message.delete()
-                await prompt_delete_previous_message.delete()
-                return
-            if str(reaction.emoji) == "❌":
-                await prompt_delete_previous_message.delete()
-                return
-        except asyncio.TimeoutError:
-            await prompt_delete_previous_message.delete()
-            return
 
 
 #  #########################
