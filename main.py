@@ -204,7 +204,6 @@ async def on_message(message):
                 # replace xws with the name of the pilot
                 for pilots_obj in data["pilots"]:
                     if pilots_obj["xws"] == pilot_id:
-                        # return pilots_obj["name"], pilots_obj["cost"]
                         pilots_obj["name"] = f"**{pilots_obj['name']}**"
                         pilots_obj["name"] += f"({pilots_obj['cost']})"
                         return pilots_obj["name"]
@@ -247,12 +246,8 @@ async def on_message(message):
                     )
 
                     upgrades_str = ", ".join(upgrades_list)
-                    # # Replace the first word of each line
-                    # # (starting with the second) with emoji
-                    # if values[0] in ship_emojis:
-                    #     values[0] = ship_emojis[values[0]]
+
                     # Replace pilot xws with pilot name
-                    # pilot_name, pilot_cost = get_pilot_name(
                     pilot_name = get_pilot_name(
                         values[1], faction_pilots_dir
                     )
@@ -263,15 +258,10 @@ async def on_message(message):
                     if len(upgrades_str) > 0:
                         squad_list += (
                             f"{ship_emojis.get(values[0])} {values[1]}: "
-                            # f"*[{pilot_cost}]*: "
                             f"{upgrades_str} [{values[2]}]\n"
                         )
                     else:
-                        squad_list += (
-                            f"{ship_emojis.get(values[0])} {values[1]} "
-                            # f"*[{pilot_cost}]* "
-                            f"[{values[2]}]\n"
-                        )
+                        squad_list += f"{ship_emojis.get(values[0])} {values[1]}\n"
         return squad_list
 
     # Get converted squad list
