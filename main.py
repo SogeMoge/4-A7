@@ -169,7 +169,7 @@ async def on_message(message):
 
                     for upgrade_obj in data:
                         if upgrade_obj["xws"] == item:
-                            item = upgrade_obj["name"]
+                            item = f"{upgrade_obj['name']}*[{upgrade_obj['cost']['value']}]*"
                             break
 
                 upgrades_list.insert(0, item)
@@ -196,7 +196,7 @@ async def on_message(message):
                 # replace xws with the name of the pilot
                 for pilots_obj in data["pilots"]:
                     if pilots_obj["xws"] == pilot_id:
-                        return pilots_obj["name"]
+                        return pilots_obj["name"], pilots_obj["cost"]
         return None
 
     def get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir):
@@ -241,7 +241,7 @@ async def on_message(message):
                     # if values[0] in ship_emojis:
                     #     values[0] = ship_emojis[values[0]]
                     # Replace pilot xws with pilot name
-                    pilot_name = get_pilot_name(
+                    pilot_name, pilot_cost = get_pilot_name(
                         values[1], faction_pilots_dir
                     )
                     if pilot_name:
@@ -250,12 +250,14 @@ async def on_message(message):
                     # If there are upgrades, add them to the list
                     if len(upgrades_str) > 0:
                         squad_list += (
-                            f"{ship_emojis.get(values[0])} **{values[1]}**: "
+                            f"{ship_emojis.get(values[0])} **{values[1]}**"
+                            f"*[{pilot_cost}]*: "
                             f"{upgrades_str} [{values[2]}]\n"
                         )
                     else:
                         squad_list += (
-                            f"{ship_emojis.get(values[0])} **{values[1]}** "
+                            f"{ship_emojis.get(values[0])} **{values[1]}**"
+                            f"*[{pilot_cost}]* "
                             f"[{values[2]}]\n"
                         )
         return squad_list
