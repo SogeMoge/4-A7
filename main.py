@@ -184,9 +184,14 @@ async def on_message(message):
                                 "name"
                             ] = f"[{upgrade_obj['name']}](https://github.com/SogeMoge/x-wing2.0-project-goldenrod/blob/2.0/src/images/En/upgrades/{upgrade_obj['xws']}.png)"
                             # add cost
-                            upgrade_obj[
-                                "name"
-                            ] += f"({upgrade_obj['cost']['value']})"
+                            if "variable" in upgrade_obj["cost"]:
+                                upgrade_obj[
+                                    "name"
+                                ] += f"({upgrade_obj['cost']['variable']})"
+                            else:
+                                upgrade_obj[
+                                    "name"
+                                ] += f"({upgrade_obj['cost']['value']})"
                             item = upgrade_obj["name"]
                             break
 
