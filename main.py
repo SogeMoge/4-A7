@@ -20,6 +20,7 @@ from discord.ui import Button, View
 from bot.xws2pretty import convert_xws
 from bot.xws2pretty import ship_emojis
 from bot.xws2pretty import convert_faction_to_dir
+from bot.xws2pretty import convert_faction_to_color
 
 # fixes libgcc_s.so.1 must be installed for pthread_cancel to work
 libgcc_s = ctypes.CDLL("libgcc_s.so.1")
@@ -106,9 +107,17 @@ async def on_message(message):
     )
     # Parse message for YASB link
     yasb_url_pattern = re.compile(
-        r"https?:\/\/xwing-legacy\.com\/\?f=[^\s]+"
+        # r"https?:\/\/xwing-legacy\.com\/\?f=[^\s]+"
+        r"https?:\/\/xwing-legacy\.com\/(preview)?\/?\?f=[^\s]+"
     )
     yasb_url_match = yasb_url_pattern.search(message.content)
+
+    # Assign values to vars bedore referensing
+    yasb_url = (
+        "https://xwing-legacy.com/?f=Rebel%20Alliance&d=v8ZsZ200Z"
+        "&sn=Something%20went%20wrong&obs="
+    )
+    xws_dict = {}
 
     # if "://xwing-legacy.com/?f" in message.content:
     if yasb_url_match:
@@ -134,6 +143,7 @@ async def on_message(message):
         xws_dict = json.loads(xws_string)
         # Get faction and pilots dir
         xws_faction = str(xws_dict["faction"])
+        faction_color = convert_faction_to_color(xws_faction)
         faction_pilots_dir = (
             "xwing-data2/data/pilots/"
             + convert_faction_to_dir(xws_faction)
@@ -169,6 +179,19 @@ async def on_message(message):
 
                     for upgrade_obj in data:
                         if upgrade_obj["xws"] == item:
+                            # add hyperlink to goldenrod project
+                            upgrade_obj[
+                                "name"
+                            ] = f"[{upgrade_obj['name']}](https://github.com/SogeMoge/x-wing2.0-project-goldenrod/blob/2.0/src/images/En/upgrades/{upgrade_obj['xws']}.png)"
+                            # add cost
+                            if "variable" in upgrade_obj["cost"]:
+                                upgrade_obj[
+                                    "name"
+                                ] += f"({upgrade_obj['cost']['variable']})"
+                            else:
+                                upgrade_obj[
+                                    "name"
+                                ] += f"({upgrade_obj['cost']['value']})"
                             item = upgrade_obj["name"]
                             break
 
@@ -196,6 +219,8 @@ async def on_message(message):
                 # replace xws with the name of the pilot
                 for pilots_obj in data["pilots"]:
                     if pilots_obj["xws"] == pilot_id:
+                        pilots_obj["name"] = f"**{pilots_obj['name']}**"
+                        pilots_obj["name"] += f"({pilots_obj['cost']})"
                         return pilots_obj["name"]
         return None
 
@@ -236,10 +261,7 @@ async def on_message(message):
                     )
 
                     upgrades_str = ", ".join(upgrades_list)
-                    # # Replace the first word of each line
-                    # # (starting with the second) with emoji
-                    # if values[0] in ship_emojis:
-                    #     values[0] = ship_emojis[values[0]]
+
                     # Replace pilot xws with pilot name
                     pilot_name = get_pilot_name(
                         values[1], faction_pilots_dir
@@ -250,14 +272,11 @@ async def on_message(message):
                     # If there are upgrades, add them to the list
                     if len(upgrades_str) > 0:
                         squad_list += (
-                            f"{ship_emojis.get(values[0])} **{values[1]}**: "
+                            f"{ship_emojis.get(values[0])} {values[1]}: "
                             f"{upgrades_str} [{values[2]}]\n"
                         )
                     else:
-                        squad_list += (
-                            f"{ship_emojis.get(values[0])} **{values[1]}** "
-                            f"[{values[2]}]\n"
-                        )
+                        squad_list += f"{ship_emojis.get(values[0])} {values[1]}\n"
         return squad_list
 
     # Get converted squad list
@@ -265,6 +284,21 @@ async def on_message(message):
         squad_list = get_squad_list(
             xws_dict, upgrades_dir, faction_pilots_dir
         )
+        # Post squad as a description in embed
+        embed = discord.Embed(
+            title=xws_dict["name"],
+            colour=faction_color,
+            url=yasb_url,
+            description=squad_list,
+        )
+
+        embed.set_footer(
+            text=message.author.display_name,
+            icon_url=message.author.display_avatar,
+        )
+
+        await yasb_channel.send(embed=embed)
+
         logger.info(
             "Incoming YASB link",
             extra={
@@ -273,6 +307,30 @@ async def on_message(message):
                 "username": message.author.name,
             },
         )
+        # allow the user to delete their query message
+        if bot_has_message_permissions:
+            prompt_delete_previous_message = await message.channel.send(
+                "Delete your message?"
+            )
+            await prompt_delete_previous_message.add_reaction("✅")
+            await prompt_delete_previous_message.add_reaction("❌")
+            try:
+                reaction, user = await bot.wait_for(
+                    event="reaction_add",
+                    timeout=10,
+                    check=lambda reaction, user: user == message.author,
+                )
+                if str(reaction.emoji) == "✅":
+                    await message.delete()
+                    await prompt_delete_previous_message.delete()
+                    return
+                if str(reaction.emoji) == "❌":
+                    await prompt_delete_previous_message.delete()
+                    return
+            except asyncio.TimeoutError:
+                await prompt_delete_previous_message.delete()
+                return
+
     except Exception as e:
         logger.error(
             f"Transmission failed: {e}",
@@ -282,45 +340,6 @@ async def on_message(message):
                 "username": message.author.name,
             },
         )
-
-    # Post squad as a description in embed
-    embed = discord.Embed(
-        title=xws_dict["name"],
-        colour=discord.Colour.random(),
-        url=yasb_url,
-        description=squad_list,
-    )
-
-    embed.set_footer(
-        text=message.author.display_name,
-        icon_url=message.author.display_avatar,
-    )
-
-    await yasb_channel.send(embed=embed)
-
-    # allow the user to delete their query message
-    if bot_has_message_permissions:
-        prompt_delete_previous_message = await message.channel.send(
-            "Delete your message?"
-        )
-        await prompt_delete_previous_message.add_reaction("✅")
-        await prompt_delete_previous_message.add_reaction("❌")
-        try:
-            reaction, user = await bot.wait_for(
-                event="reaction_add",
-                timeout=10,
-                check=lambda reaction, user: user == message.author,
-            )
-            if str(reaction.emoji) == "✅":
-                await message.delete()
-                await prompt_delete_previous_message.delete()
-                return
-            if str(reaction.emoji) == "❌":
-                await prompt_delete_previous_message.delete()
-                return
-        except asyncio.TimeoutError:
-            await prompt_delete_previous_message.delete()
-            return
 
 
 #  #########################

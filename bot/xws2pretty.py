@@ -1,4 +1,5 @@
 """Variables for xws_dict conversion to pretty format."""
+import discord
 
 
 def convert_xws(string):
@@ -35,6 +36,24 @@ def convert_faction_to_dir(string):
         mapping.get(word.lower(), word) for word in words
     ]
     return " ".join(converted_words)
+
+
+def convert_faction_to_color(string):
+    """Convert xws faction name to embed color."""
+    color_map = {
+        "rebelalliance": "0xcb120e",
+        "galacticempire": "0xd6d6dd",
+        "scumandvillainy": "0x253a21",
+        "firstorder": "0xb42828",
+        "resistance": "0xd87325",
+        "galacticrepublic": "0xeff3f3",
+        "separatistalliance": "0x20308d",
+    }
+    color_code = color_map.get(string.lower(), "0x000000")
+    color_hex = int(color_code, 16)
+    color = discord.Colour(color_hex)
+
+    return color
 
 
 ship_emojis = {
