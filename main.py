@@ -201,8 +201,8 @@ async def on_message(message):
                     if pilots_obj["xws"] == pilot_id:
                         name = pilots_obj["name"]
                         cost = pilots_obj["cost"]
-                        return name, cost
-        return None
+        return name, cost
+        # return None
 
     def get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir):
         """Get yasb link and convert it to readable embed.
