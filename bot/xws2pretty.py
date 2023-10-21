@@ -1,4 +1,5 @@
 """Variables for xws_dict conversion to pretty format."""
+import discord
 
 
 def convert_xws(string):
