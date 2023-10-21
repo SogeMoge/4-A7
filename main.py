@@ -205,9 +205,8 @@ async def on_message(message):
                 for pilots_obj in data["pilots"]:
                     if pilots_obj["xws"] == pilot_id:
                         # return pilots_obj["name"], pilots_obj["cost"]
-                        pilots_obj[
-                            "name"
-                        ] += f"*({pilots_obj['cost']})*"
+                        pilots_obj["name"] = f"**{pilots_obj['name']}**"
+                        pilots_obj["name"] += f"({pilots_obj['cost']})"
                         return pilots_obj["name"]
         return None
 
@@ -263,13 +262,13 @@ async def on_message(message):
                     # If there are upgrades, add them to the list
                     if len(upgrades_str) > 0:
                         squad_list += (
-                            f"{ship_emojis.get(values[0])} **{values[1]}**: "
+                            f"{ship_emojis.get(values[0])} {values[1]}: "
                             # f"*[{pilot_cost}]*: "
                             f"{upgrades_str} [{values[2]}]\n"
                         )
                     else:
                         squad_list += (
-                            f"{ship_emojis.get(values[0])} **{values[1]}** "
+                            f"{ship_emojis.get(values[0])} {values[1]} "
                             # f"*[{pilot_cost}]* "
                             f"[{values[2]}]\n"
                         )
