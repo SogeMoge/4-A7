@@ -19,5 +19,5 @@ jobs:
             eval "$(ssh-agent -s)"
             ssh-add /opt/.ssh/github
             cd /opt/4-A7-maintenance 
-            git submodule update --init --recursive
+            git submodule update --recursive --remote
             sudo systemctl restart xwsbot-maintenance
