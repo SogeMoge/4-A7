@@ -368,7 +368,11 @@ async def rules(ctx):
         label="Adopted Battle Scenarios",
         url="https://x2po.org/battle-scenarios",
     )
-    view = View(button1, button2, button3, button4)
+    button5 = Button(
+        label="Video tutorials",
+        url="https://x2po.org/media",
+    )
+    view = View(button1, button2, button3, button4, button5)
     await ctx.respond("Rules:", view=view)
 
 
@@ -386,7 +390,7 @@ async def builders(ctx):
     )
     button3 = Button(
         label="Infinite Arenas",
-        url="https://infinitearenas.com/legacy/"
+        url="https://infinitearenas.com/legacy/",
     )
     view = View(button1, button2, button3)
     await ctx.respond("Squad Builders:", view=view)
