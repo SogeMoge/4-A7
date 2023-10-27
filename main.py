@@ -77,6 +77,7 @@ token = os.environ.get("DISCORD_TOKEN")
 
 # Prefix url for squad 2 xws conversion
 RB_ENDPOINT = """ https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy? """
+UPGRADES_DIR = "xwing-data2/data/upgrades"
 
 #  #########################
 #  EVENTS
@@ -148,7 +149,6 @@ async def on_message(message):
             "xwing-data2/data/pilots/"
             + convert_faction_to_dir(xws_faction)
         )
-        upgrades_dir = "xwing-data2/data/upgrades"
     # post Faction and total points on the first line
 
     def get_upgrades_list(upgrades, upgrades_dir):
@@ -167,12 +167,12 @@ async def on_message(message):
 
         for upgrade_type, upgrade in upgrades.items():
             for item in upgrade:
-                for filename in os.listdir(upgrades_dir):
+                for filename in os.listdir(UPGRADES_DIR):
                     if not filename.endswith(".json"):
                         continue
 
                     with open(
-                        os.path.join(upgrades_dir, filename),
+                        os.path.join(UPGRADES_DIR, filename),
                         encoding="UTF-8",
                     ) as f:
                         data = json.load(f)
@@ -207,7 +207,7 @@ async def on_message(message):
             faction_pilots_dir (str): pilots dir in xwing-data2 repo
 
         Returns:
-            None: converts pilot xws to pilot name
+            None: converts pilot xws to pilot name with cost
         """
         for filename in os.listdir(faction_pilots_dir):
             if filename.endswith(".json"):
@@ -257,7 +257,7 @@ async def on_message(message):
                         for key in ["ship", "id", "points", "upgrades"]
                     ]
                     upgrades_list = get_upgrades_list(
-                        values[3], upgrades_dir
+                        values[3], UPGRADES_DIR
                     )
 
                     upgrades_str = ", ".join(upgrades_list)
@@ -282,7 +282,7 @@ async def on_message(message):
     # Get converted squad list
     try:
         squad_list = get_squad_list(
-            xws_dict, upgrades_dir, faction_pilots_dir
+            xws_dict, UPGRADES_DIR, faction_pilots_dir
         )
         # Post squad as a description in embed
         embed = discord.Embed(
@@ -353,10 +353,22 @@ async def on_message(message):
 async def rules(ctx):
     """Post X-Wing 2.0 Legacy rules url."""
     button1 = Button(
-        label="X-Wing 2.0 Legacy rules",
+        label="Standard",
         url="https://x2po.org/standard",
     )
-    view = View(button1)
+    button2 = Button(
+        label="Epic",
+        url="https://x2po.org/epic",
+    )
+    button3 = Button(
+        label="Wild Space",
+        url="https://x2po.org/wild-space",
+    )
+    button4 = Button(
+        label="Adopted Battle Scenarios",
+        url="https://x2po.org/battle-scenarios",
+    )
+    view = View(button1, button2, button3, button4)
     await ctx.respond("Rules:", view=view)
 
 
@@ -364,7 +376,7 @@ async def rules(ctx):
     # guild_ids=[test_guild_id, russian_guild_id]
 )  # create a slash command for the supplied guilds
 async def builders(ctx):
-    """Post Squad Builders for X-Wing from community."""
+    """Post X-Wing 2.0 Legacy compatible Squad Builders"""
     button1 = Button(
         label="YASB 2.0 Legacy", url="https://xwing-legacy.com/"
     )
@@ -372,7 +384,11 @@ async def builders(ctx):
         label="X-Wing 2nd Ed. Squads Designer",
         url="https://www.dmborque.eu/swz",
     )
-    view = View(button1, button2)
+    button3 = Button(
+        label="Infinite Arenas",
+        url="https://infinitearenas.com/legacy/"
+    )
+    view = View(button1, button2, button3)
     await ctx.respond("Squad Builders:", view=view)
 
 
