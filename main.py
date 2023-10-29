@@ -75,9 +75,6 @@ bot = discord.Bot(intents=intents)
 load_dotenv()
 token = os.environ.get("DISCORD_TOKEN")
 
-# Prefix url for squad 2 xws conversion
-RB_ENDPOINT = """ https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy? """
-UPGRADES_DIR = "xwing-data2/data/upgrades"
 
 #  #########################
 #  EVENTS
@@ -113,12 +110,18 @@ async def on_message(message):
     )
     yasb_url_match = yasb_url_pattern.search(message.content)
 
-    # Assign values to vars bedore referensing
+    # Vars block start
+    # Prefix url for squad 2 xws conversion
+    RB_ENDPOINT = (
+        "https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy?"
+    )
+    UPGRADES_DIR = "xwing-data2/data/upgrades"
     yasb_url = (
         "https://xwing-legacy.com/?f=Rebel%20Alliance&d=v8ZsZ200Z"
         "&sn=Something%20went%20wrong&obs="
     )
     xws_dict = {}
+    FACTION_PILOTS_DIR = "xwing-data2/data/pilots/"
 
     # if "://xwing-legacy.com/?f" in message.content:
     if yasb_url_match:
@@ -145,10 +148,7 @@ async def on_message(message):
         # Get faction and pilots dir
         xws_faction = str(xws_dict["faction"])
         faction_color = convert_faction_to_color(xws_faction)
-        faction_pilots_dir = (
-            "xwing-data2/data/pilots/"
-            + convert_faction_to_dir(xws_faction)
-        )
+        FACTION_PILOTS_DIR += convert_faction_to_dir(xws_faction)
     # post Faction and total points on the first line
 
     def get_upgrades_list(upgrades, upgrades_dir):
@@ -209,10 +209,10 @@ async def on_message(message):
         Returns:
             None: converts pilot xws to pilot name with cost
         """
-        for filename in os.listdir(faction_pilots_dir):
+        for filename in os.listdir(FACTION_PILOTS_DIR):
             if filename.endswith(".json"):
                 with open(
-                    os.path.join(faction_pilots_dir, filename),
+                    os.path.join(FACTION_PILOTS_DIR, filename),
                     encoding="UTF-8",
                 ) as f:
                     data = json.load(f)
@@ -264,7 +264,7 @@ async def on_message(message):
 
                     # Replace pilot xws with pilot name
                     pilot_name = get_pilot_name(
-                        values[1], faction_pilots_dir
+                        values[1], FACTION_PILOTS_DIR
                     )
                     if pilot_name:
                         values[1] = pilot_name
@@ -282,7 +282,7 @@ async def on_message(message):
     # Get converted squad list
     try:
         squad_list = get_squad_list(
-            xws_dict, UPGRADES_DIR, faction_pilots_dir
+            xws_dict, UPGRADES_DIR, FACTION_PILOTS_DIR
         )
         # Post squad as a description in embed
         embed = discord.Embed(
