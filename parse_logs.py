@@ -23,7 +23,8 @@ with open("xwsbot.log", "r") as f:
 
         # Increment the username count (excluding "sogemoge")
         if log_dict["username"] != "sogemoge":
-            username_counts[log_dict["username"]] += 1
+            if log_dict["level"] == "INFO":
+                username_counts[log_dict["username"]] += 1
 
 # Print the info counts by month
 print("###### INFO counts by month:")
