@@ -149,7 +149,8 @@ async def on_message(message):
         xws_faction = str(xws_dict["faction"])
         faction_color = convert_faction_to_color(xws_faction)
         FACTION_PILOTS_DIR += convert_faction_to_dir(xws_faction)
-    # post Faction and total points on the first line
+    else:
+        return
 
     def get_upgrades_list(upgrades, upgrades_dir):
         """Get list of upgrades per pilot.
@@ -280,66 +281,52 @@ async def on_message(message):
         return squad_list
 
     # Get converted squad list
-    try:
-        squad_list = get_squad_list(
-            xws_dict, UPGRADES_DIR, FACTION_PILOTS_DIR
+    squad_list = get_squad_list(
+        xws_dict, UPGRADES_DIR, FACTION_PILOTS_DIR
+    )
+    # Post squad as a description in embed
+    embed = discord.Embed(
+        title=xws_dict["name"],
+        colour=faction_color,
+        url=yasb_url,
+        description=squad_list,
+    )
+    embed.set_footer(
+        text=message.author.display_name,
+        icon_url=message.author.display_avatar,
+    )
+    await yasb_channel.send(embed=embed)
+    logger.info(
+        "Incoming YASB link",
+        extra={
+            "yasb_url": yasb_url,
+            "squad_list": squad_list,
+            "username": message.author.name,
+        },
+    )
+    # allow the user to delete their query message
+    if bot_has_message_permissions:
+        prompt_delete_previous_message = await message.channel.send(
+            "Delete your message?"
         )
-        # Post squad as a description in embed
-        embed = discord.Embed(
-            title=xws_dict["name"],
-            colour=faction_color,
-            url=yasb_url,
-            description=squad_list,
-        )
-
-        embed.set_footer(
-            text=message.author.display_name,
-            icon_url=message.author.display_avatar,
-        )
-
-        await yasb_channel.send(embed=embed)
-
-        logger.info(
-            "Incoming YASB link",
-            extra={
-                "yasb_url": yasb_url,
-                "squad_list": squad_list,
-                "username": message.author.name,
-            },
-        )
-        # allow the user to delete their query message
-        if bot_has_message_permissions:
-            prompt_delete_previous_message = await message.channel.send(
-                "Delete your message?"
+        await prompt_delete_previous_message.add_reaction("✅")
+        await prompt_delete_previous_message.add_reaction("❌")
+        try:
+            reaction, user = await bot.wait_for(
+                event="reaction_add",
+                timeout=10,
+                check=lambda reaction, user: user == message.author,
             )
-            await prompt_delete_previous_message.add_reaction("✅")
-            await prompt_delete_previous_message.add_reaction("❌")
-            try:
-                reaction, user = await bot.wait_for(
-                    event="reaction_add",
-                    timeout=10,
-                    check=lambda reaction, user: user == message.author,
-                )
-                if str(reaction.emoji) == "✅":
-                    await message.delete()
-                    await prompt_delete_previous_message.delete()
-                    return
-                if str(reaction.emoji) == "❌":
-                    await prompt_delete_previous_message.delete()
-                    return
-            except asyncio.TimeoutError:
+            if str(reaction.emoji) == "✅":
+                await message.delete()
                 await prompt_delete_previous_message.delete()
                 return
-
-    except Exception as e:
-        logger.error(
-            f"Transmission failed: {e}",
-            extra={
-                "yasb_url": yasb_url_match,
-                "squad_list": None,
-                "username": message.author.name,
-            },
-        )
+            if str(reaction.emoji) == "❌":
+                await prompt_delete_previous_message.delete()
+                return
+        except asyncio.TimeoutError:
+            await prompt_delete_previous_message.delete()
+            return
 
 
 #  #########################
@@ -380,7 +367,7 @@ async def rules(ctx):
     # guild_ids=[test_guild_id, russian_guild_id]
 )  # create a slash command for the supplied guilds
 async def builders(ctx):
-    """Post X-Wing 2.0 Legacy compatible Squad Builders"""
+    """Post X-Wing 2.0 Legacy compatible Squad Builders."""
     button1 = Button(
         label="YASB 2.0 Legacy", url="https://xwing-legacy.com/"
     )
