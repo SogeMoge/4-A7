@@ -335,7 +335,7 @@ async def on_message(message):
         logger.error(
             f"Transmission failed: {e}",
             extra={
-                "yasb_url": yasb_url,
+                "yasb_url": yasb_url_match,
                 "squad_list": None,
                 "username": message.author.name,
             },
