@@ -224,7 +224,51 @@ async def on_message(message):
                         pilots_obj["name"] += f"({pilots_obj['cost']})"
                         return pilots_obj["name"]
         return None
+    
+    def get_gamemode(yasb_url: str) -> tuple[str,int]: #TODO remember type hint for "Or None"
+        """Very quick and dirty method to extract game mode of built squad
+        
 
+        Args:
+            yasb_url (str): original url of squad from xwing-legacy.com
+
+        Returns:
+            tuple[str,int]: Game mode information (Game mode name, Total points)
+                            Returns None if extraction fails 
+        """
+
+        MODE_MAPPING = {
+            "s": "Standard",
+            "h": "Wildspace",
+            "e": "Epic",
+            "q": "Quickbuild"
+        }
+
+        # Very dirty, will need modified if squadbuilder changes url format
+        MODE_CHAR_LOC = 6
+        TOTAL_POINTS_SLICE_START = 8
+        TOTAL_POINTS_SLICE_END = -1
+
+        # Extract mode and points total from url
+        url_mode_pattern = re.compile(
+            r"&d=v8Z[sheq]Z\d*Z"
+        )
+        mode_match = url_mode_pattern.search(yasb_url)
+        mode_indicator = mode_match.group()
+        
+        try: 
+            return ( 
+            MODE_MAPPING[mode_indicator[MODE_CHAR_LOC]],
+            int(mode_indicator[TOTAL_POINTS_SLICE_START,
+                               TOTAL_POINTS_SLICE_END]) 
+            ) 
+        
+        except ValueError as e:
+            return #Failure of integer conversion implies URL format is off 
+
+        
+        
+        
     def get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir):
         """Get yasb link and convert it to readable embed.
 
