@@ -259,7 +259,7 @@ async def on_message(message):
         try: 
             return ( 
             MODE_MAPPING[mode_indicator[MODE_CHAR_LOC]],
-            int(mode_indicator[TOTAL_POINTS_SLICE_START,
+            int(mode_indicator[TOTAL_POINTS_SLICE_START:
                                TOTAL_POINTS_SLICE_END]) 
             ) 
         
