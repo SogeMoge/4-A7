@@ -265,9 +265,6 @@ async def on_message(message):
         
         except ValueError as e:
             return #Failure of integer conversion implies URL format is off 
-
-        
-        
         
     def get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir):
         """Get yasb link and convert it to readable embed.
@@ -280,13 +277,20 @@ async def on_message(message):
         Returns:
             str: multiline string of pilots and upgrades
         """
+        # Note gamemode string currently unused
+        game_mode = get_gamemode(xws_dict["vendor"]["yasb"]["link"])
+
+        # Meta details header
         squad_list = ""
         squad_list += (
             convert_xws(str(xws_dict["faction"]))
             + " ["
             + str(xws_dict["points"])
-            + "]\n"
         )
+        if game_mode:
+            squad_list += ("/" + str(game_mode[1]))
+        squad_list += "]\n"
+        
         # Check if pilots is a list and iterate throught pilots
         if "pilots" in xws_dict and isinstance(
             xws_dict["pilots"], list
