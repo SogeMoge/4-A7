@@ -289,7 +289,7 @@ async def on_message(message):
             + str(xws_dict["points"])
         )
         if game_mode:
-            squad_list += "/" + str(game_mode[1])
+            squad_list += "/" + str(game_mode[1]) + ": " + str(game_mode[1])
         squad_list += "]\n"
 
         # Check if pilots is a list and iterate throught pilots
