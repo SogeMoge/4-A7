@@ -293,13 +293,15 @@ async def on_message(message):
             squad_list += (
                 "/"
                 + str(game_mode[1])
-                + " with "
-                + str(bid)
-                + " pt bid: "
+                + ": "
                 + str(game_mode[0])
+                + "]\n"
+                + "Bid: "
+                + str(bid)
+                + "\n"
             )
-
-        squad_list += "]\n"
+        else:
+            squad_list += "]\n"
 
         # Check if pilots is a list and iterate throught pilots
         if "pilots" in xws_dict and isinstance(xws_dict["pilots"], list):
