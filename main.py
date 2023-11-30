@@ -99,9 +99,7 @@ async def on_message(message):
         return
     bot_has_message_permissions = (
         message.guild
-        and message.channel.permissions_for(
-            message.guild.me
-        ).manage_messages
+        and message.channel.permissions_for(message.guild.me).manage_messages
     )
     # Parse message for YASB link
     yasb_url_pattern = re.compile(
@@ -224,24 +222,26 @@ async def on_message(message):
                         pilots_obj["name"] += f"({pilots_obj['cost']})"
                         return pilots_obj["name"]
         return None
-    
-    def get_gamemode(yasb_url: str) -> tuple[str,int]: #TODO remember type hint for "Or None"
+
+    def get_gamemode(
+        yasb_url: str,
+    ) -> tuple[str, int]:  # TODO remember type hint for "Or None"
         """Very quick and dirty method to extract game mode of built squad
-        
+
 
         Args:
             yasb_url (str): original url of squad from xwing-legacy.com
 
         Returns:
             tuple[str,int]: Game mode information (Game mode name, Total points)
-                            Returns None if extraction fails 
+                            Returns None if extraction fails
         """
 
         MODE_MAPPING = {
             "s": "Standard",
             "h": "Wildspace",
             "e": "Epic",
-            "q": "Quickbuild"
+            "q": "Quickbuild",
         }
 
         # Very dirty, will need modified if squadbuilder changes url format
@@ -250,22 +250,23 @@ async def on_message(message):
         TOTAL_POINTS_SLICE_END = -1
 
         # Extract mode and points total from url
-        url_mode_pattern = re.compile(
-            r"&d=v8Z[sheq]Z\d*Z"
-        )
+        url_mode_pattern = re.compile(r"&d=v8Z[sheq]Z\d*Z")
         mode_match = url_mode_pattern.search(yasb_url)
         mode_indicator = mode_match.group()
-        
-        try: 
-            return ( 
-            MODE_MAPPING[mode_indicator[MODE_CHAR_LOC]],
-            int(mode_indicator[TOTAL_POINTS_SLICE_START:
-                               TOTAL_POINTS_SLICE_END]) 
-            ) 
-        
-        except ValueError as e:
-            return #Failure of integer conversion implies URL format is off 
-        
+
+        try:
+            return (
+                MODE_MAPPING[mode_indicator[MODE_CHAR_LOC]],
+                int(
+                    mode_indicator[
+                        TOTAL_POINTS_SLICE_START:TOTAL_POINTS_SLICE_END
+                    ]
+                ),
+            )
+
+        except ValueError:
+            return  # Failure of integer conversion implies URL format is off
+
     def get_squad_list(xws_dict, upgrades_dir, faction_pilots_dir):
         """Get yasb link and convert it to readable embed.
 
@@ -288,33 +289,26 @@ async def on_message(message):
             + str(xws_dict["points"])
         )
         if game_mode:
-            squad_list += ("/" + str(game_mode[1]))
+            squad_list += "/" + str(game_mode[1])
         squad_list += "]\n"
-        
+
         # Check if pilots is a list and iterate throught pilots
-        if "pilots" in xws_dict and isinstance(
-            xws_dict["pilots"], list
-        ):
+        if "pilots" in xws_dict and isinstance(xws_dict["pilots"], list):
             for item in xws_dict["pilots"]:
                 # Make sure nesessary keys are present
                 if all(
-                    key in item
-                    for key in ["ship", "id", "points", "upgrades"]
+                    key in item for key in ["ship", "id", "points", "upgrades"]
                 ):
                     values = [
                         item[key]
                         for key in ["ship", "id", "points", "upgrades"]
                     ]
-                    upgrades_list = get_upgrades_list(
-                        values[3], UPGRADES_DIR
-                    )
+                    upgrades_list = get_upgrades_list(values[3], UPGRADES_DIR)
 
                     upgrades_str = ", ".join(upgrades_list)
 
                     # Replace pilot xws with pilot name
-                    pilot_name = get_pilot_name(
-                        values[1], FACTION_PILOTS_DIR
-                    )
+                    pilot_name = get_pilot_name(values[1], FACTION_PILOTS_DIR)
                     if pilot_name:
                         values[1] = pilot_name
 
@@ -325,13 +319,13 @@ async def on_message(message):
                             f"{upgrades_str} [{values[2]}]\n"
                         )
                     else:
-                        squad_list += f"{ship_emojis.get(values[0])} {values[1]}\n"
+                        squad_list += (
+                            f"{ship_emojis.get(values[0])} {values[1]}\n"
+                        )
         return squad_list
 
     # Get converted squad list
-    squad_list = get_squad_list(
-        xws_dict, UPGRADES_DIR, FACTION_PILOTS_DIR
-    )
+    squad_list = get_squad_list(xws_dict, UPGRADES_DIR, FACTION_PILOTS_DIR)
     # Post squad as a description in embed
     embed = discord.Embed(
         title=xws_dict["name"],
@@ -416,9 +410,7 @@ async def rules(ctx):
 )  # create a slash command for the supplied guilds
 async def builders(ctx):
     """Post X-Wing 2.0 Legacy compatible Squad Builders."""
-    button1 = Button(
-        label="YASB 2.0 Legacy", url="https://xwing-legacy.com/"
-    )
+    button1 = Button(label="YASB 2.0 Legacy", url="https://xwing-legacy.com/")
     button2 = Button(
         label="X-Wing 2nd Ed. Squads Designer",
         url="https://www.dmborque.eu/swz",
