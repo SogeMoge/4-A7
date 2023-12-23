@@ -1,5 +1,6 @@
 """Main bot file witt slash commands and events."""
-# pylint: disable=wrong-import-position, consider-using-f-string, E0602:undefined-variable
+# pylint: disable=wrong-import-position, consider-using-f-string
+# pylint: disable=E0602:undefined-variable
 
 import ctypes
 
@@ -337,11 +338,12 @@ async def on_message(message):
 
     # Get converted squad list
     squad_list = get_squad_list(xws_dict, UPGRADES_DIR, FACTION_PILOTS_DIR)
+    squad_hyperlink = f"[{xws_dict['name']}]({yasb_url})"
     # Post squad as a description in embed
     embed = discord.Embed(
-        title=xws_dict["name"],
+        title=squad_hyperlink,
         colour=faction_color,
-        url=yasb_url,
+        # url=yasb_url,
         description=squad_list,
     )
     embed.set_footer(
