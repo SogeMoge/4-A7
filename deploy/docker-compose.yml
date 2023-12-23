@@ -2,7 +2,7 @@ version: "3"
 name: xwsbot
 services:
   xwsbot:
-    image: docker.io/sogemoge/4-a7:latest
+    image: docker.io/sogemoge/4-a7:IMAGE_4A7
     container_name: inventory_droid
     environment:
       - COMPOSE_PROJECT_NAME
