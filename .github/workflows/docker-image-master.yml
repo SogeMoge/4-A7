@@ -46,5 +46,5 @@ jobs:
             git submodule update --recursive --remote
             systemctl --user stop 'podman-compose@xwsbot'
             export IMAGE_4A7=$(git log -n 1 --pretty=format:"%H" | cut -c1-8)
-            sed -i -e "s/IMAGE_4A7/${IMAGE_4A7}/g" deploy/docker-compose.yml
+            sed -i -e "s/latest/${IMAGE_4A7}/g" deploy/docker-compose.yml
             systemctl --user start 'podman-compose@xwsbot'
