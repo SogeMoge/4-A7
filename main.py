@@ -283,7 +283,7 @@ async def on_message(message):
         game_mode = get_gamemode(xws_dict["vendor"]["yasb"]["link"])
 
         # Meta details header
-        squad_list = ""
+        squad_list = f"[{xws_dict['name']}]({yasb_url})\n"
         squad_list += (
             convert_xws(str(xws_dict["faction"]))
             + " ["
@@ -338,10 +338,9 @@ async def on_message(message):
 
     # Get converted squad list
     squad_list = get_squad_list(xws_dict, UPGRADES_DIR, FACTION_PILOTS_DIR)
-    squad_hyperlink = f"[{xws_dict['name']}]({yasb_url})"
     # Post squad as a description in embed
     embed = discord.Embed(
-        title=squad_hyperlink,
+        # title=squad_hyperlink,
         colour=faction_color,
         # url=yasb_url,
         description=squad_list,
