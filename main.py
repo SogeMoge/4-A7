@@ -283,7 +283,7 @@ async def on_message(message):
         game_mode = get_gamemode(xws_dict["vendor"]["yasb"]["link"])
 
         # Meta details header
-        squad_list = f"[{xws_dict['name']}]({yasb_url})\n"
+        squad_list = f"### [{xws_dict['name']}]({yasb_url})\n"
         squad_list += (
             convert_xws(str(xws_dict["faction"]))
             + " ["
