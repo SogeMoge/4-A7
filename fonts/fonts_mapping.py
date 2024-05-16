@@ -4,7 +4,7 @@ from PIL import Image, ImageFont, ImageDraw, ImageOps
 
 
 class Icon:
-    default_colour = ('', (0, 0, 0))
+    default_colour = ("", (0, 0, 0))
 
     def __init__(self, letter):
         try:
@@ -25,15 +25,16 @@ class Icon:
                     self.colours.append((name, colour))
                 if size:
                     self.size = size
+
         return Temp
 
 
-Red = Icon.factory('red', "#EF232B")
-Green = Icon.factory('green', "#6BBE44")
-Yellow = Icon.factory('yellow', "#B6B335")
-Blue = Icon.factory('blue', "#7ED3E5")
-Orange = Icon.factory('orange', "#E5B922")
-Purple = Icon.factory('purple', "#B590D3")
+Red = Icon.factory("red", "#EF232B")
+Green = Icon.factory("green", "#6BBE44")
+Yellow = Icon.factory("yellow", "#B6B335")
+Blue = Icon.factory("blue", "#7ED3E5")
+Orange = Icon.factory("orange", "#E5B922")
+Purple = Icon.factory("purple", "#B590D3")
 
 Medium = Icon.factory(size=100)
 
@@ -94,7 +95,7 @@ fonts = {
         "vt49decimator": "d",
         "tierbheavy": "J",
         "gr75mediumtransport": "1",
-        "mg100starfortresssf17": "Z",
+        "mg100starfortress": "Z",
         "scavengedyt1300": "Y",
         "rz2awing": "E",
         "t70xwing": "w",
@@ -128,7 +129,7 @@ fonts = {
         "laatigunship": "/",
         "nimbusclassvwing": ",",
         "syliureclasshyperspacering": "*",
-        "clonez95headhunter": "}"
+        "clonez95headhunter": "}",
     }
 }
 
@@ -137,8 +138,8 @@ size = (128, 128)
 
 
 def main():
-    if not os.path.exists('emoji'):
-        os.mkdir('emoji')
+    if not os.path.exists("emoji"):
+        os.mkdir("emoji")
 
     for font, glyphs in fonts.items():
         for name, glyph in glyphs.items():
@@ -160,25 +161,34 @@ def main():
                 draw = ImageDraw.Draw(im)
 
                 if font == "xwing-miniatures-ships.ttf":
-                    draw.arc((75, 75, 225, 225), start=0, end=360, fill="#F2F3F5", width=100)
+                    draw.arc(
+                        (75, 75, 225, 225),
+                        start=0,
+                        end=360,
+                        fill="#F2F3F5",
+                        width=100,
+                    )
 
-                draw.text((151, 152), glyph, font=imfont, fill=colour, anchor='mm')
+                draw.text(
+                    (151, 152), glyph, font=imfont, fill=colour, anchor="mm"
+                )
 
                 # remove unneccessory whitespaces if needed
-                im = im.crop(ImageOps.invert(im.convert('RGB')).getbbox())
+                im = im.crop(ImageOps.invert(im.convert("RGB")).getbbox())
 
                 # im = ImageOps.invert(im)
                 im.thumbnail(size, Image.LANCZOS)
 
-                background = Image.new('RGBA', size, (255, 255, 255, 0))
+                background = Image.new("RGBA", size, (255, 255, 255, 0))
 
                 background.paste(
                     im,
-                    ((size[0] - im.size[0]) // 2, (size[1] - im.size[1]) // 2))
+                    ((size[0] - im.size[0]) // 2, (size[1] - im.size[1]) // 2),
+                )
 
                 # write into file
                 background.save(f"emoji/{colour_name}{name}.png")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
