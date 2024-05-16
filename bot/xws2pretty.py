@@ -111,7 +111,7 @@ ship_emojis = {
     "vt49decimator": "<:vt49decimator:1158007642258673724>",
     "tierbheavy": "<:tierbheavy:1158007557277888533>",
     "gr75mediumtransport": "<:gr75mediumtransport:1158007287135354992>",
-    "mg100starfortresssf17": "<:mg100starfortresssf17:1158007333553713242>",
+    "mg100starfortress": "<:mg100starfortress:1158007333553713242>",
     "scavengedyt1300": "<:scavengedyt1300:1158007484196331580>",
     "rz2awing": "<:rz2awing:1158007391091175514>",
     "t70xwing": "<:t70xwing:1158007502349271142>",
