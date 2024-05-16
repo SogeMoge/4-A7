@@ -285,6 +285,7 @@ async def on_message(message):
 
         # Meta details header
         # squad_list = f"### [{xws_dict['name']}]({yasb_url})\n"
+        squad_list = ""
         squad_list += (
             convert_xws(str(xws_dict["faction"]))
             + " ["
