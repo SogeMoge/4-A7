@@ -1,4 +1,5 @@
 """Main bot file witt slash commands and events."""
+
 # pylint: disable=wrong-import-position, consider-using-f-string
 # pylint: disable=E0602:undefined-variable
 
@@ -180,9 +181,9 @@ async def on_message(message):
                     for upgrade_obj in data:
                         if upgrade_obj["xws"] == item:
                             # add hyperlink to goldenrod project
-                            upgrade_obj[
-                                "name"
-                            ] = f"[{upgrade_obj['name']}](https://github.com/SogeMoge/x-wing2.0-project-goldenrod/blob/2.0/src/images/En/upgrades/{upgrade_obj['xws']}.png)"
+                            upgrade_obj["name"] = (
+                                f"[{upgrade_obj['name']}](https://github.com/SogeMoge/x-wing2.0-project-goldenrod/blob/2.0/src/images/En/upgrades/{upgrade_obj['xws']}.png)"
+                            )
                             # add cost
                             if "variable" in upgrade_obj["cost"]:
                                 upgrade_obj[
@@ -283,7 +284,7 @@ async def on_message(message):
         game_mode = get_gamemode(xws_dict["vendor"]["yasb"]["link"])
 
         # Meta details header
-        squad_list = f"### [{xws_dict['name']}]({yasb_url})\n"
+        # squad_list = f"### [{xws_dict['name']}]({yasb_url})\n"
         squad_list += (
             convert_xws(str(xws_dict["faction"]))
             + " ["
@@ -349,7 +350,9 @@ async def on_message(message):
         text=message.author.display_name,
         icon_url=message.author.display_avatar,
     )
-    await yasb_channel.send(embed=embed)
+    await yasb_channel.send(
+        f"### [{xws_dict['name']}]({yasb_url})\n", embed=embed
+    )
     logger.info(
         "Incoming YASB link",
         extra={
