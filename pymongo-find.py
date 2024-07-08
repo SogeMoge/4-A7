@@ -1,7 +1,4 @@
 # from pymongo.mongo_client import MongoClient
-import json
-import os
-from glob import iglob
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
 
@@ -25,43 +22,55 @@ collections_pilots = xws_db["pilots"]
 collection = xws_db["factions"]
 
 try:
+    print("\n^^^^^^^^^^^^  START SCAN  ^^^^^^^^^^^^")
     pilot = []
     ability = []
     # pilots = list(collections_pilots.find())
     # pilots = list(collections_pilots.find({"xws": "sithinfiltrator"}))
     pilot = list(
         collections_pilots.find(
-            {"pilots.xws": "zizitlo"}, {"pilots.$": 1, "_id": 0}
+            {"pilots.xws": "kyloren"}, {"pilots.$": 1, "_id": 0}
         )
     )
     print(f"Pilot found in collection: {pilot}")
 
     ability = pilot[0]["pilots"][0]["ability"]
     print(f"\nPilot ability: {ability}")
-
+    print("^^^^^^^^^^^^  STOP SCAN  ^^^^^^^^^^^^\n")
 except Exception as e:
     print(e)
 
+def find_pilot(str: xws):
+    """Get all pilot data
 
-try:
-    pilots = []
-    ability = []
-    # pilots = list(collections_pilots.find())
-    # pilots = list(collections_pilots.find({"xws": "sithinfiltrator"}))
-    pilots_data = list(
-        collections_pilots.find(
-            {"pilots.name": {"$regex": "^Han.*"}},
-            {"pilots.$": 1, "_id": 0},
-        )
-    )
-    print(f"Pilots found in collection: {pilots_data}")
-    for pilots_entry in pilots_data:
-        for pilot in pilots_entry["pilots"]:
-            ability = pilot["ability"]
-            pilot_name = pilot["name"]
-            print(f"\n{pilot_name} ability: {ability}")
-except Exception as e:
-    print(e)
+    Args:
+        str (xws): xws id
+    """
+
+# try:
+#     pilots = []
+#     ability = []
+#     # pilots = list(collections_pilots.find())
+#     # pilots = list(collections_pilots.find({"xws": "sithinfiltrator"}))
+#     pilots_data = list(
+#         collections_pilots.find(
+#             # search for all sabine* names (case-insensitive)
+#             {"pilots.name": {"$regex": "^sabine.*", "$options": "i"}},
+#             {"pilots.$": 1, "_id": 0},
+#         )
+#     )
+#     print(f"Pilots found in collection: {pilots_data}")
+#     # iterates over each entry in the pilots_data list,
+#     # then iterates over each pilot dictionary within
+#     # the 'pilots' key of each pilots_entry
+#     for pilots_entry in pilots_data:
+#         for pilot in pilots_entry["pilots"]:
+#             ability = pilot["ability"]
+#             pilot_name = pilot["name"]
+#             pilot_caption = pilot["caption"]
+#             print(f'\n{pilot_name} "{pilot_caption}" ability: {ability}')
+# except Exception as e:
+#     print(e)
 
 # try:
 #     xws_db.drop_collection(collection)
