@@ -28,3 +28,27 @@ paths:
                   error:
                     type: string
                     example: "An error occurred during database reinitialization."
+  /pilot/{xws}:
+    get:
+      summary: Get pilot data by XWS.
+      description: Retrieves pilot data from the database based on the provided XWS code.
+      parameters:
+        - in: path
+          name: xws
+          schema:
+            type: string
+          required: true
+          description: The XWS code of the pilot.
+      responses:
+        "200":
+          description: Pilot data found.
+        "404":
+          description: Pilot not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Pilot not found."

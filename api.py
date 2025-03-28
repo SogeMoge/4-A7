@@ -27,12 +27,12 @@ async def reinit_db():
     data_root_dir = "submodules/xwing-data2/data"
     try:
         prepare_collections(data_root_dir)
-        pilot = find_pilot("blackout")
+        pilot = find_pilot("firstordertestpilot")
         if pilot:
-            print("Reinitialization successful. Pilot Blackout found.")
+            print("Reinitialization successful. Test pilot found.")
         else:
             print(
-                "Reinitialization successful, but pilot Blackout not found. Check your data."
+                "Reinitialization successful, but Test pilot not found. Check your data."
             )
         return ReinitResponse(message="Database reinitialized successfully.")
     except Exception as e:
