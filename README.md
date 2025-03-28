@@ -12,6 +12,19 @@ Discord bot that converts http://xwing-legacy.com/ links to rich embed messages
 - <https://xwing-legacy.com/> and prints the lists in chat
 - Just paste the list URL into chat, and let the bot handle it! (on Windows, you can press F6 then CTRL+C, and paste into chat)
 
+# How To
+
+Start api server:
+**Linux**
+```
+uvicorn api:app --port 7000 --reload
+```
+
+**Windows**
+```
+C:/Python311/python.exe -m uvicorn api:app --port 7000 --reload
+```
+
 # Inspired by
 
 <a href="https://github.com/Apollonaut13/r2-d7">R2-D7</a> bot

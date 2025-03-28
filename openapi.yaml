@@ -1,0 +1,30 @@
+openapi: 3.1.1
+info:
+  title: X-Wing Data API
+  version: 1.0.0
+paths:
+  /reinit_db:
+    post:
+      summary: Reinitialize the X-Wing data database.
+      description: This endpoint triggers a full re-import of the X-Wing data into the MongoDB database.  Use with caution!
+      responses:
+        "200":
+          description: Database reinitialized successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Database reinitialized successfully."
+        "500":
+          description: An error occurred during database reinitialization.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "An error occurred during database reinitialization."

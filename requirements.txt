@@ -1,4 +1,6 @@
 py-cord==2.4.1
-python-dotenv
-requests
-pymongo
+python-dotenv==1.0.0
+requests==2.31.0
+pymongo==4.6.0
+fastapi==0.115.12
+uvicorn==0.34.0
