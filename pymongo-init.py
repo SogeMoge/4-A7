@@ -24,15 +24,16 @@ COLLECTIONS_UPLOAD = {
 }
 
 
-def access_variable_by_string(var_name):
-    globals_dict = globals()
-    if var_name in globals_dict:
-        return globals_dict[var_name]
-    else:
-        return None
-
-
 def is_json_array(file_path):
+    """Check if processing json file is array.
+    If true then insert_many should be used.
+
+    Args:
+        file_path (str): path to json file
+
+    Returns:
+        bool: true if file is an array
+    """
     with open(file_path, "r", encoding="utf-8") as file:
         try:
             data = json.load(file)
@@ -41,8 +42,24 @@ def is_json_array(file_path):
             return False
 
 
+def drop_collections():
+    """Drops all collections defined in COLLECTIONS_UPLOAD."""
+    for collection_name in COLLECTIONS_UPLOAD:
+        try:
+            if collection_name in xws_db.list_collection_names():
+                xws_db.drop_collection(collection_name)
+                print(f"Collection '{collection_name}' dropped successfully.")
+            else:
+                print(f"Collection '{collection_name}' does not exist.")
+        except Exception as e:
+            print(f"Error dropping collection '{collection_name}': {e}")
+    print(f"Collections after drop: {xws_db.list_collection_names()}")
+
+
 def import_collection(collection_name, data_dir):
-    """Imports data for a specific collection."""
+    """Import all xwing-data2 files into mongodb collections
+    representing each game component type.
+    """
     collection = xws_db[collection_name]
     if collection_name not in xws_db.list_collection_names():
         rootdir_glob = os.path.join(data_dir, collection_name, "**/*")
@@ -65,7 +82,8 @@ def import_collection(collection_name, data_dir):
 
 
 def prepare_collections(data_root_dir):
-    """Checks and imports all collections if needed."""
+    """Imports all collections srom scratch to accomodate file updates."""
+    drop_collections()
     for collection_name in COLLECTIONS_UPLOAD:
         import_collection(collection_name, data_root_dir)
 
