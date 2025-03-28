@@ -31,7 +31,7 @@ app = FastAPI(
 async def reinit_db():
     try:
         reload_collections(data_root_dir, mongodb_uri)
-        pilot = find_pilot("firstordertestpilot".mongodb_uri)
+        pilot = find_pilot("firstordertestpilot", mongodb_uri)
         if pilot:
             print("Reinitialization successful. Test pilot found.")
         else:
