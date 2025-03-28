@@ -2,7 +2,12 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
 from bot.mongo.find_pilot import find_pilot
-from bot.mongo.init_db import prepare_collections
+from bot.mongo.init_db import reload_collections
+
+mongodb_uri = (
+    "mongodb://root:example@localhost:27017/xwingdata?authSource=admin"
+)
+data_root_dir = "submodules/xwing-data2/data"
 
 
 class ReinitResponse(BaseModel):
@@ -24,10 +29,9 @@ app = FastAPI(
     responses={500: {"model": ErrorResponse}},  # Improved error handling
 )
 async def reinit_db():
-    data_root_dir = "submodules/xwing-data2/data"
     try:
-        prepare_collections(data_root_dir)
-        pilot = find_pilot("firstordertestpilot")
+        reload_collections(data_root_dir, mongodb_uri)
+        pilot = find_pilot("firstordertestpilot".mongodb_uri)
         if pilot:
             print("Reinitialization successful. Test pilot found.")
         else:
@@ -42,7 +46,7 @@ async def reinit_db():
 @app.get("/pilot/{xws}")
 async def get_pilot(xws: str):
     try:
-        pilot = find_pilot(xws)
+        pilot = find_pilot(xws, mongodb_uri)
         return pilot
     except Exception as e:
         raise HTTPException(status_code=404, detail=f"Pilot not found: {e}")
