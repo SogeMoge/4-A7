@@ -1,4 +1,4 @@
-from bot.mongo.find_pilot import find_pilot
+from bot.mongo.search import find_pilot
 from bot.mongo.init_db import prepare_collections
 
 mongodb_uri = (

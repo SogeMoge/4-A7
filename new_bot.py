@@ -7,6 +7,10 @@ import discord
 import requests
 from dotenv import load_dotenv
 
+from bot.mongo.init_db import prepare_collections
+from bot.mongo.search import find_faction, find_pilot, find_ship_by_pilot
+from bot.xws2pretty import ship_emojis
+
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
 MONGODB_URI = os.getenv(
@@ -17,7 +21,7 @@ RB_ENDPOINT = os.getenv(
     "RB_ENDPOINT",
     "https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy?",
 )
-xws_data_root_dir = "submodules/xwing-data2/data"
+XWS_DATA_ROOT_DIR = "submodules/xwing-data2/data"
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -125,59 +129,100 @@ async def on_message(message: discord.Message):
                 " I couldn't retrieve the list data from the server."
             )
             return
+
+    def get_gamemode(
+        yasb_url: str,
+    ) -> tuple[str, int]:  # TODO remember type hint for "Or None"
+        """Very quick and dirty method to extract game mode of built squad
+        Args:
+            yasb_url (str): original url of squad from xwing-legacy.com
+        Returns:
+            tuple[str,int]: Game mode information (Game mode name, Total points)
+                            Returns None if extraction fails
+        """
+        MODE_MAPPING = {
+            "s": "Standard",
+            "h": "Wildspace",
+            "e": "Epic",
+            "q": "Quickbuild",
+        }
+
+        # Very dirty, will need modified if squadbuilder changes url format
+        MODE_CHAR_LOC = 6
+        TOTAL_POINTS_SLICE_START = 8
+        TOTAL_POINTS_SLICE_END = -1
+
+        # Extract mode and points total from url
+        url_mode_pattern = re.compile(r"&d=v8Z[sheq]Z\d*Z")
+        mode_match = url_mode_pattern.search(yasb_url)
+        mode_indicator = mode_match.group()
+
+        try:
+            return (
+                MODE_MAPPING[mode_indicator[MODE_CHAR_LOC]],
+                int(
+                    mode_indicator[
+                        TOTAL_POINTS_SLICE_START:TOTAL_POINTS_SLICE_END
+                    ]
+                ),
+            )
+        except ValueError:
+            return  # Failure of integer conversion implies URL format is off
+
     # --- Data Extraction Start ---
     try:
         # 1. Get Faction
-        faction = xws_dict.get("faction", "Unknown Faction")
+        faction_xws = xws_dict.get("faction", "Unknown Faction")
+        faction_details = find_faction(faction_xws, MONGODB_URI)
 
         # 2. Get Squad Name
         squad_name = xws_dict.get("name", "Unnamed Squad")
 
-        # 3. Get Pilot IDs and their Upgrades
-        pilots_details = []
-        pilots_list_data = xws_dict.get("pilots", [])
+        # 3. Get Squad points
+        squad_points = xws_dict.get("points", "Unnamed Squad")
 
-        for pilot_data in pilots_list_data:
-            pilot_id = pilot_data.get("id")
-            pilot_upgrades = []
-            upgrades_data = pilot_data.get("upgrades", {})
+        # 4. Get Squad game mode
+        squad_gamemode = get_gamemode(
+            xws_dict.get("vendor").get("yasb").get("link")
+        )
+        if squad_gamemode:
+            bid = int(squad_gamemode[1]) - int(squad_points)
+        else:
+            bid = None
 
-            for upgrade_type, upgrade_ids_list in upgrades_data.items():
-                for upgrade_id in upgrade_ids_list:
-                    pilot_upgrades.append(
-                        {"type": upgrade_type, "id": upgrade_id}
-                    )
-            pilots_details.append({"id": pilot_id, "upgrades": pilot_upgrades})
+        pilots_details = [
+            find_pilot(pilot["id"], MONGODB_URI)
+            for pilot in xws_dict["pilots"]
+        ]
         # --- Data Extraction End ---
 
         logger.info(
-            f"Successfully extracted data for '{squad_name}' ({faction})"
+            f"Successfully extracted data for '{squad_name}' ({faction_xws})"
         )
-        logger.info(f"Faction: {faction}")
-        logger.info(f"Squad Name: {squad_name}")
-        for pilot in pilots_details:
-            logger.info(f"  Pilot ID: {pilot['id']}")
-            if pilot["upgrades"]:
-                for upgrade in pilot["upgrades"]:
-                    logger.info(
-                        f"    - Upgrade Type: {upgrade['type']}, ID: {upgrade['id']}"
-                    )
-            else:
-                logger.info("    - No upgrades")
 
         # Example of using the extracted data in the embed:
         # You can format this much better, this is just a basic example
-        embed_description = f"**Squad:** {squad_name}\n"
-        embed_description += f"**Faction:** {faction.replace('_', ' ').title()}\n\n"
-        embed_description += "**Pilots:**\n"
+        squad_hyperlink = f"[{squad_name}]({found_url})"
+        embed_list_title = (
+            f"{squad_hyperlink}\n"
+            f"{faction_details['name']} "
+            f"[{squad_points}/"
+            + str(squad_gamemode[1])
+            + ": "
+            + str(squad_gamemode[0])
+            + "]\n"
+            f"Bid: {bid}\n"
+        )
+        embed_description = embed_list_title
+
         for pilot in pilots_details:
-            embed_description += f"- `{pilot['id']}`\n"
-            for upgrade in pilot["upgrades"]:
-                embed_description += (
-                    f"  - *{upgrade['type']}*: `{upgrade['id']}`\n"
-                )
+            ship_details = find_ship_by_pilot(pilot["xws"], MONGODB_URI)
+            pilot_line = (
+                f"{ship_emojis[ship_details['xws']]} "
+                f"i{pilot['initiative']} {pilot['name']}\n"
+            )
+            embed_description += pilot_line
         embed = discord.Embed(
-            title=f"Squad Details: {squad_name}",
             description=embed_description,
             color=discord.Color.blue(),  # Optional: set a color
         )
@@ -229,6 +274,7 @@ if not DISCORD_TOKEN or DISCORD_TOKEN == "YOUR_REAL_BOT_TOKEN":
     )
 else:
     try:
+        prepare_collections(XWS_DATA_ROOT_DIR, MONGODB_URI)
         bot.run(DISCORD_TOKEN)
     except discord.errors.LoginFailure:
         logger.error(
