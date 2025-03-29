@@ -41,7 +41,8 @@ def is_json_array(file_path):
 
 
 def drop_collections(mongodb_uri):
-    """Drops all collections defined in COLLECTIONS_UPLOAD from the 'xwing-data2' database.
+    """Drops all collections defined in COLLECTIONS_UPLOAD from the
+        'xwing-data2' database.
 
     This function connects to a MongoDB instance using the provided URI,
     accesses the 'xwing-data2' database, and attempts to drop each collection
@@ -56,8 +57,10 @@ def drop_collections(mongodb_uri):
         None
 
     Raises:
-        pymongo.errors.ConnectionFailure: If a connection to the MongoDB server cannot be established.
-        pymongo.errors.OperationFailure: If an error occurs during a database operation.
+        pymongo.errors.ConnectionFailure:
+            If a connection to the MongoDB server cannot be established.
+        pymongo.errors.OperationFailure:
+            If an error occurs during a database operation.
         Exception: If any other unexpected error occurs.
     """
     client = MongoClient(mongodb_uri, server_api=ServerApi("1"))
@@ -89,7 +92,8 @@ def import_collection(collection_name, data_dir, mongodb_uri):
     `insert_one` and `insert_many` respectively.
 
     Args:
-        collection_name (str): The name of the MongoDB collection to import data into.
+        collection_name (str): The name of the MongoDB collection to
+            import data into.
         data_dir (str): The root directory containing the data files.
         mongodb_uri (str): The MongoDB connection URI.
 
@@ -97,10 +101,13 @@ def import_collection(collection_name, data_dir, mongodb_uri):
         None
 
     Raises:
-        pymongo.errors.ConnectionFailure: If a connection to the MongoDB server cannot be established.
-        pymongo.errors.OperationFailure: If an error occurs during a database operation.
+        pymongo.errors.ConnectionFailure: If a connection to the
+            MongoDB server cannot be established.
+        pymongo.errors.OperationFailure: If an error occurs during a
+            database operation.
         json.JSONDecodeError: If a JSON file cannot be decoded.
-        FileNotFoundError: If a file in the specified directory cannot be found.
+        FileNotFoundError: If a file in the specified directory
+            cannot be found.
         Exception: If any other unexpected error occurs.
     """
     client = MongoClient(mongodb_uri, server_api=ServerApi("1"))
@@ -148,10 +155,13 @@ def prepare_collections(data_root_dir, mongodb_uri):
         None
 
     Raises:
-        pymongo.errors.ConnectionFailure: If a connection to the MongoDB server cannot be established.
-        pymongo.errors.OperationFailure: If an error occurs during a database operation.
+        pymongo.errors.ConnectionFailure: If a connection to the
+            MongoDB server cannot be established.
+        pymongo.errors.OperationFailure: If an error occurs during a
+            database operation.
         json.JSONDecodeError: If a JSON file cannot be decoded.
-        FileNotFoundError: If a file in the specified directory cannot be found.
+        FileNotFoundError: If a file in the specified directory
+            cannot be found.
         Exception: If any other unexpected error occurs.
     """
     for collection_name in COLLECTIONS_UPLOAD:
@@ -159,7 +169,8 @@ def prepare_collections(data_root_dir, mongodb_uri):
 
 
 def reload_collections(data_root_dir, mongodb_uri):
-    """Reinitializes the MongoDB database with data from the xwing-data2 dataset.
+    """Reinitializes the MongoDB database with data from the
+        xwing-data2 dataset.
 
     This function first drops all existing collections defined in
     `COLLECTIONS_UPLOAD` from the 'xwing-data2' database. Then, it re-imports
@@ -175,10 +186,13 @@ def reload_collections(data_root_dir, mongodb_uri):
         None
 
     Raises:
-        pymongo.errors.ConnectionFailure: If a connection to the MongoDB server cannot be established.
-        pymongo.errors.OperationFailure: If an error occurs during a database operation.
+        pymongo.errors.ConnectionFailure: If a connection to the
+            MongoDB server cannot be established.
+        pymongo.errors.OperationFailure: If an error occurs during a
+            database operation.
         json.JSONDecodeError: If a JSON file cannot be decoded.
-        FileNotFoundError: If a file in the specified directory cannot be found.
+        FileNotFoundError: If a file in the specified directory
+            cannot be found.
         Exception: If any other unexpected error occurs.
     """
     drop_collections(mongodb_uri)
