@@ -9,8 +9,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-
-RB_ENDPOINT = "https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy?"
+MONGODB_URI = os.getenv(
+    "MONGODB_URI",
+    "mongodb://root:example@localhost:27017/xwingdata?authSource=admin",
+)
+RB_ENDPOINT = os.getenv(
+    "RB_ENDPOINT",
+    "https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy?",
+)
+xws_data_root_dir = "submodules/xwing-data2/data"
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -69,8 +76,10 @@ async def on_message(message: discord.Message):
         )
 
         # Construct the Rollbetter URL
-        # Rollbetter endpoint expects the *full* YASB URL as a query parameter value
-        # Example: https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy?https://xwing-legacy.com/?f=...
+        # Rollbetter endpoint expects the *full* YASB URL
+        #   as a query parameter value
+        # Ex: https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy?
+        #   https://xwing-legacy.com/?f=...
         rollbetter_url = RB_ENDPOINT + found_url
         logger.info(f"Requesting XWS from Rollbetter: {rollbetter_url}")
 
@@ -159,7 +168,7 @@ async def on_message(message: discord.Message):
         # Example of using the extracted data in the embed:
         # You can format this much better, this is just a basic example
         embed_description = f"**Squad:** {squad_name}\n"
-        embed_description += f"**Faction:** {faction.replace('_', ' ').title()}\n\n"  # Format faction name nicely
+        embed_description += f"**Faction:** {faction.replace('_', ' ').title()}\n\n"
         embed_description += "**Pilots:**\n"
         for pilot in pilots_details:
             embed_description += f"- `{pilot['id']}`\n"
@@ -185,9 +194,11 @@ async def on_message(message: discord.Message):
         await message.channel.send(embed=embed)
 
     except Exception as e:
-        # Catch potential errors during data extraction (e.g., unexpected format)
+        # Catch potential errors during data extraction
+        #   (e.g., unexpected format)
         logger.error(
-            f"Error processing XWS data structure for URL {found_url}. Error: {e}",
+            "Error processing XWS data structure for"
+            f" URL {found_url}. Error: {e}",
             exc_info=True,  # Include traceback information in the log
             extra={
                 "yasb_url": found_url,
