@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from bot.mongo.init_db import prepare_collections
 from bot.mongo.search import find_faction, find_pilot, find_ship_by_pilot
-from bot.xws2pretty import ship_emojis, component_emojis
+from bot.xws2pretty import component_emojis, ship_emojis
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -22,6 +22,15 @@ RB_ENDPOINT = os.getenv(
     "https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy?",
 )
 XWS_DATA_ROOT_DIR = "submodules/xwing-data2/data"
+GOLDENROD_PILOTS_URL = (
+    "https://github.com/SogeMoge/x-wing2.0-project-goldenrod/blob/2.0/"
+    "src/images/En/pilots/"
+)
+GOLDENROD_UPGRADES_URL = (
+    "https://github.com/SogeMoge/x-wing2.0-project-goldenrod/blob/2.0/"
+    "src/images/En/upgrades/"
+)
+
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -211,15 +220,17 @@ async def on_message(message: discord.Message):
             + ": "
             + str(squad_gamemode[0])
             + "]\n"
-            f"Bid: {bid}\n"
+            f"-# Bid: {bid}\n"
         )
         embed_description = embed_list_title
 
         for pilot in pilots_details:
             ship_details = find_ship_by_pilot(pilot["xws"], MONGODB_URI)
+            pilot_card_image = f"{GOLDENROD_PILOTS_URL}{pilot['xws']}.png"
             pilot_line = (
                 f"{ship_emojis[ship_details['xws']]} "
-                f"{component_emojis[pilot['initiative']]} {pilot['name']}\n"
+                f"{component_emojis[pilot['initiative']]} "
+                f"**[{pilot['name']}]({pilot_card_image})**\n"
             )
             embed_description += pilot_line
         embed = discord.Embed(
