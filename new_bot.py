@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 
 from bot.mongo.init_db import prepare_collections
 from bot.mongo.search import find_faction, find_pilot, find_ship_by_pilot
-from bot.xws2pretty import ship_emojis
+from bot.xws2pretty import ship_emojis, component_emojis
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -219,7 +219,7 @@ async def on_message(message: discord.Message):
             ship_details = find_ship_by_pilot(pilot["xws"], MONGODB_URI)
             pilot_line = (
                 f"{ship_emojis[ship_details['xws']]} "
-                f"i{pilot['initiative']} {pilot['name']}\n"
+                f"{component_emojis[pilot['initiative']]} {pilot['name']}\n"
             )
             embed_description += pilot_line
         embed = discord.Embed(

@@ -56,6 +56,18 @@ def convert_faction_to_color(string):
     return color
 
 
+component_emojis = {
+    0: ":zero:",
+    1: ":one:",
+    2: ":two:",
+    3: ":three:",
+    4: ":four:",
+    5: ":five:",
+    6: ":six:",
+    7: ":seven:",
+    8: ":eight:",
+}
+
 ship_emojis = {
     "asf01bwing": "<:asf01bwing:1158007152250736711>",
     "arc170starfighter": "<:arc170starfighter:1158007149235019908>",
