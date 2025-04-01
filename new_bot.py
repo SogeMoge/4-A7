@@ -400,7 +400,7 @@ async def on_message(message: discord.Message):
                 upgrades_formatted = ""
 
             if upgrades_formatted == "":
-                final_pilot_line = f"{pilot_line_base}"
+                final_pilot_line = f"{pilot_line_base}\n"
             else:
                 final_pilot_line = f"{pilot_line_base}{upgrades_formatted}"
                 final_pilot_line += f" __**[{current_pilot_total_cost}]**__\n"
