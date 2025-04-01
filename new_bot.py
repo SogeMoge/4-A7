@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import re
+import random
 
 import discord
 import requests
@@ -49,6 +50,49 @@ MODE_MAPPING = {
     "e": "Epic",
     "q": "Quickbuild",
 }
+
+FOOTER_PHRASES = [
+    "Processing complete. List provided by:",
+    "Analysis concluded for squadron designation submitted by:",
+    "Data formatted as requested for unit:",
+    "Calculation successful. Originator identified as:",
+    "Cross-referencing protocols engaged. Input attributed to:",
+    "This unit has prepared the manifest received from:",
+    "Fulfilling primary function. Data sourced from organic designation:",
+    "Squadron configuration logged per input from:",
+    "Information processed according to standard parameters for:",
+    "Probability of data corruption minimal. List registered to:",
+    "Tactical assessment derived from input by:",
+    "Combat effectiveness calculated for squadron provided by:",
+    "Optimal configuration analyzed. Submitted by designation:",
+    "Commencing tactical display. List parameters set by:",
+    "Unit deployment follows, per directive originating from:",
+    "Logistical breakdown prepared for Confederacy Asset:",
+    "Analyzing potential engagement matrix. Data provided by:",
+    "Record updated. Squadron composition input by:",
+    "Query resolved. List compiler identified as:",
+    "Affirmative. Displaying squadron details submitted by:",
+    "Data stream decoded. Source identified as:",
+    "Input parameters verified. Originating unit:",
+    "Manifest generation initiated by:",
+    "Log entry created. Data provided by organic:",
+    "Task completed as per directive from:",
+    "This unit awaits further instruction. Current data by:",
+    "Operational efficiency dictates prompt processing for:",
+    "My function is to serve. Analysis performed for:",
+    "Executing request protocol for user designation:",
+    "Evaluating threat potential based on squadron from:",
+    "Resource allocation noted. List provided by contact:",
+    "Updating battle grid. Configuration submitted by:",
+    "Cross-referencing against known Republic tactics. Input from:",
+    "Roger, roger. Processing tactical configuration from:",
+    "For the Separatist Alliance! Squadron details logged for:",
+    "This configuration's probability of success calculated for:",
+    "Assessing synergistic values. List compiled by:",
+    "Analytical subroutines active. Processing list from:",
+    "Verifying data integrity. Submitted by unit:",
+    "Compliance noted. Squadron details follow for:",
+]
 
 # --- Logging Setup ---
 logger = logging.getLogger(__name__)
@@ -449,8 +493,9 @@ async def on_message(message: discord.Message):
                 logger.warning("No embeds generated.", extra=log_context)
             else:
                 total_embeds = len(embeds_to_send)
+                random_phrase = random.choice(FOOTER_PHRASES)
                 base_footer_text = (
-                    f"List submitted by: {message.author.display_name}"
+                    f"{random_phrase} {message.author.display_name}"
                 )
                 footer_icon_url = (
                     message.author.display_avatar.url
@@ -462,9 +507,9 @@ async def on_message(message: discord.Message):
                     f"Sending {total_embeds} embed(s).", extra=log_context
                 )
                 for i, embed in enumerate(embeds_to_send):
-                    part_counter = f"Part {i + 1}/{total_embeds}"
+                    part_counter = f"\n[Part {i + 1}/{total_embeds}]"
                     footer_text = (
-                        f"{base_footer_text} | {part_counter}"
+                        f"{base_footer_text}{part_counter}"
                         if total_embeds > 1
                         else base_footer_text
                     )
