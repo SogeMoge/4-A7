@@ -10,18 +10,21 @@ import requests
 from dotenv import load_dotenv
 
 # Assuming these are correctly defined/imported
+# --- reinstate prepare_collections import ---
 from bot.mongo.init_db import prepare_collections
 from bot.mongo.search import (
     find_faction,
     find_pilot,
     find_ship_by_pilot,
     find_upgrade,
+    # Optional: close_db_connection # if you implement graceful shutdown
 )
-from bot.xws2pretty import ini_emojis, ship_emojis
+from bot.xws2pretty import ini_emojis, ship_emojis, convert_faction_to_color
 
 # --- Configuration & Constants ---
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
+# --- MONGODB_URI for prepare_collections ---
 MONGODB_URI = os.getenv(
     "MONGODB_URI",
     "mongodb://root:example@localhost:27017/xwingdata?authSource=admin",
@@ -30,6 +33,7 @@ RB_ENDPOINT = os.getenv(
     "RB_ENDPOINT",
     "https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy?",
 )
+# --- XWS_DATA_ROOT_DIR needed for prepare_collections ---
 XWS_DATA_ROOT_DIR = "submodules/xwing-data2/data"
 GOLDENROD_PILOTS_URL = (
     "https://github.com/SogeMoge/x-wing2.0-project-goldenrod/blob/2.0/"
@@ -52,6 +56,7 @@ MODE_MAPPING = {
 }
 
 FOOTER_PHRASES = [
+    # ... (Your list of 40 phrases remains the same) ...
     "Processing complete. List provided by:",
     "Analysis concluded for squadron designation submitted by:",
     "Data formatted as requested for unit:",
@@ -95,12 +100,11 @@ FOOTER_PHRASES = [
 ]
 
 # --- Logging Setup ---
+# ... (Logging setup remains the same) ...
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 log_file = "xwsbot.log"
-file_handler = logging.FileHandler(
-    log_file, encoding="utf-8"
-)  # Specify encoding
+file_handler = logging.FileHandler(log_file, encoding="utf-8")
 formatter = logging.Formatter(
     "%(asctime)s - %(levelname)s - %(name)s - %(message)s"
 )
@@ -111,16 +115,16 @@ logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
 
 # --- Discord Bot Setup ---
+# ... (Intents and Bot definition remain the same) ...
 intents = discord.Intents.default()
 intents.messages = True
 intents.message_content = True
-intents.members = True  # Check if needed, might increase resource usage
-intents.presences = True  # Check if needed, might increase resource usage
-
+intents.members = True
+intents.presences = True
 bot = discord.Bot(intents=intents)
 
 # --- Concurrency Control ---
-channel_locks = {}  # Dictionary to hold an asyncio.Lock per channel ID
+channel_locks = {}
 
 
 # --- Helper Functions ---
@@ -128,24 +132,17 @@ def get_gamemode(yasb_url: str) -> tuple[str, int] | None:
     """Extracts game mode and point limit from YASB URL."""
     mode_match = MODE_URL_PATTERN.search(yasb_url)
     if not mode_match:
-        logger.warning(f"Could not find game mode pattern in URL: {yasb_url}")
         return None
     mode_indicator = mode_match.group()
     try:
-        mode_char = mode_indicator[6]  # MODE_CHAR_LOC
-        points_str = mode_indicator[8:-1]  # TOTAL_POINTS_SLICE_START:END
+        mode_char = mode_indicator[6]
+        points_str = mode_indicator[8:-1]
         mode_name = MODE_MAPPING.get(mode_char)
         if mode_name and points_str.isdigit():
             return mode_name, int(points_str)
         else:
-            logger.warning(
-                f"Invalid mode char '{mode_char}' or points '{points_str}' in URL: {yasb_url}"
-            )
             return None
     except (IndexError, KeyError):
-        logger.error(
-            f"Error parsing game mode string: {mode_indicator}", exc_info=True
-        )
         return None
 
 
@@ -166,24 +163,18 @@ def calculate_upgrade_cost(upgrade_data, ship_details, pilot_info):
     cost_obj = upgrade_data.get("cost")
     if not isinstance(cost_obj, dict):
         return None
-
     if "value" in cost_obj:
         try:
             return int(cost_obj["value"])
         except (ValueError, TypeError):
             return None
-
     if "variable" in cost_obj:
         variable_type = cost_obj.get("variable")
         values_dict = cost_obj.get("values")
         if not isinstance(values_dict, dict):
             return None
-
         lookup_key = None
-        ship_stats = (
-            ship_details.get("stats") if ship_details else None
-        )  # Ensure ship_details exists
-
+        ship_stats = ship_details.get("stats") if ship_details else None
         if variable_type == "size":
             lookup_key = ship_details.get("size") if ship_details else None
         elif variable_type == "agility":
@@ -191,13 +182,9 @@ def calculate_upgrade_cost(upgrade_data, ship_details, pilot_info):
             if agility is not None:
                 lookup_key = str(agility)
         elif variable_type == "initiative":
-            initiative = (
-                pilot_info.get("initiative") if pilot_info else None
-            )  # Ensure pilot_info exists
+            initiative = pilot_info.get("initiative") if pilot_info else None
             if initiative is not None:
                 lookup_key = str(initiative)
-        # Add other variable types here if needed
-
         if lookup_key is not None:
             raw_cost = values_dict.get(lookup_key)
             if raw_cost is not None:
@@ -205,10 +192,8 @@ def calculate_upgrade_cost(upgrade_data, ship_details, pilot_info):
                     return int(raw_cost)
                 except (ValueError, TypeError):
                     return None
-        # Return None if key missing, lookup_key not determined, or conversion failed
         return None
-
-    return None  # Return None if cost structure is unknown
+    return None
 
 
 # --- Bot Events ---
@@ -221,11 +206,11 @@ async def on_ready():
 @bot.event
 async def on_message(message: discord.Message):
     if message.author == bot.user or not message.content:
-        return  # Ignore bot messages and empty messages
+        return
 
     yasb_url_match = YASB_URL_PATTERN.search(message.content)
     if not yasb_url_match:
-        return  # Not a YASB URL
+        return
 
     lock = channel_locks.setdefault(message.channel.id, asyncio.Lock())
     async with lock:
@@ -249,9 +234,7 @@ async def on_message(message: discord.Message):
             # --- Fetch XWS Data ---
             rollbetter_url = RB_ENDPOINT + found_url
             try:
-                response = requests.get(
-                    rollbetter_url, timeout=20
-                )  # Increased timeout slightly
+                response = requests.get(rollbetter_url, timeout=20)
                 response.raise_for_status()
                 xws_dict = response.json()
                 logger.debug("Received XWS JSON", extra=log_context)
@@ -262,9 +245,9 @@ async def on_message(message: discord.Message):
                     exc_info=True,
                 )
                 await message.channel.send(
-                    f"Sorry {message.author.mention}, I couldn't retrieve list data from the server."
+                    f"Sorry {message.author.mention}, I couldn't retrieve list data."
                 )
-                return  # Release lock early
+                return
             except json.JSONDecodeError as e:
                 logger.error(
                     f"Failed to decode JSON response: {e}. Response text: {response.text[:500]}...",
@@ -274,28 +257,26 @@ async def on_message(message: discord.Message):
                 await message.channel.send(
                     f"Sorry {message.author.mention}, I couldn't understand the list format."
                 )
-                return  # Release lock early
+                return
 
             # --- Extract Core List Info ---
             faction_xws = xws_dict.get("faction")
+            faction_color = convert_faction_to_color(faction_xws)
             squad_name = xws_dict.get("name", "Unnamed Squad")
-            squad_points_xws = xws_dict.get("points")  # Use this if available
+            squad_points_xws = xws_dict.get("points")
             yasb_link = xws_dict.get("vendor", {}).get("yasb", {}).get("link")
 
             if not faction_xws:
                 logger.error("Faction missing in XWS data.", extra=log_context)
                 await message.channel.send(
-                    f"Sorry {message.author.mention}, the list data seems incomplete (missing faction)."
+                    f"Sorry {message.author.mention}, list data incomplete (missing faction)."
                 )
                 return
 
-            faction_details = find_faction(faction_xws, MONGODB_URI)
+            faction_details = find_faction(
+                faction_xws
+            )  # Uses global DB connection
             if not faction_details:
-                logger.error(
-                    f"Could not find faction details for {faction_xws}",
-                    extra=log_context,
-                )
-                # Use a fallback name but continue
                 faction_details = {
                     "name": faction_xws.replace("_", " ").title()
                 }
@@ -303,6 +284,12 @@ async def on_message(message: discord.Message):
             squad_gamemode_info = (
                 get_gamemode(yasb_link) if yasb_link else None
             )
+            if not squad_gamemode_info and yasb_link:
+                logger.warning(
+                    f"Could not extract game mode from YASB link: {yasb_link}",
+                    extra=log_context,
+                )
+
             game_mode_name = (
                 squad_gamemode_info[0] if squad_gamemode_info else "Unknown"
             )
@@ -318,7 +305,7 @@ async def on_message(message: discord.Message):
                     bid = squad_gamemode_info[1] - int(squad_points_xws)
                     bid_str = str(bid)
                 except (ValueError, TypeError):
-                    bid_str = "?"  # Handle case where points aren't numeric
+                    pass
 
             # --- Process Pilots and Upgrades (Fetch DB Data) ---
             pilot_details_list = []
@@ -333,25 +320,16 @@ async def on_message(message: discord.Message):
             for pilot_entry in xws_pilots:
                 pilot_id = pilot_entry.get("id")
                 if not pilot_id:
-                    continue  # Skip pilot if ID missing
+                    continue
 
-                pilot_info = find_pilot(pilot_id, MONGODB_URI)
+                pilot_info = find_pilot(pilot_id)  # Uses global DB connection
                 if not pilot_info:
-                    logger.error(
-                        f"DBError: Could not find pilot info for ID: {pilot_id}",
-                        extra=log_context,
-                    )
-                    continue  # Skip pilot if DB lookup fails
+                    continue
 
                 ship_details = find_ship_by_pilot(
-                    pilot_info.get("xws"), MONGODB_URI
-                )
+                    pilot_info.get("xws")
+                )  # Uses global DB connection
                 if not ship_details:
-                    logger.error(
-                        f"DBError: Could not find ship details for pilot XWS: {pilot_info.get('xws')}",
-                        extra=log_context,
-                    )
-                    # Use placeholder ship to prevent crash downstream
                     ship_details = {
                         "xws": "unknown",
                         "name": "Unknown Ship",
@@ -366,18 +344,12 @@ async def on_message(message: discord.Message):
                     if isinstance(upgrade_ids, list):
                         for upgrade_id in upgrade_ids:
                             upgrade_info = find_upgrade(
-                                upgrade_id, MONGODB_URI
-                            )
+                                upgrade_id
+                            )  # Uses global DB connection
                             if not upgrade_info:
-                                logger.error(
-                                    f"DBError: Could not find upgrade info for ID: {upgrade_id}",
-                                    extra=log_context,
-                                )
-                                # Add placeholder to keep list structure
                                 upgrades_data.append(
                                     {
                                         "name": f"Unknown({upgrade_id})",
-                                        "calculated_cost": None,
                                         "sides": [{"image": ""}],
                                     }
                                 )
@@ -401,7 +373,7 @@ async def on_message(message: discord.Message):
                 f"[{squad_name}]({found_url})" if found_url else squad_name
             )
             embed_list_title = (
-                f"{squad_hyperlink}\n"
+                f"**{squad_hyperlink}**\n"
                 f"{faction_details.get('name', 'Unknown Faction')} "
                 f"[{display_points}/{points_limit}: {game_mode_name}]\n"
                 f"-# Bid: {bid_str}\n"
@@ -411,29 +383,27 @@ async def on_message(message: discord.Message):
             current_description = embed_list_title
 
             for details in pilot_details_list:
-                pilot = details["pilot"]
-                ship = details["ship"]
-                upgrades = details["upgrades"]
+                pilot, ship, upgrades = (
+                    details["pilot"],
+                    details["ship"],
+                    details["upgrades"],
+                )
 
                 pilot_total_cost = 0
                 try:
-                    pilot_base_cost = int(pilot.get("cost", 0))
-                    pilot_total_cost += pilot_base_cost
+                    pilot_total_cost += int(pilot.get("cost", 0))
                 except (ValueError, TypeError):
-                    logger.warning(
-                        f"Could not parse base cost for pilot {pilot.get('name')}",
-                        extra=log_context,
-                    )
+                    pass
 
-                # Pilot Line
                 ship_emoji = ship_emojis.get(ship.get("xws"), "❓")
                 ini_emoji = ini_emojis.get(pilot.get("initiative"), "❓")
                 pilot_name = pilot.get("name", "Unknown Pilot")
                 pilot_image = pilot.get("image", GOLDENROD_PILOTS_URL)
                 pilot_cost_str = f"({pilot.get('cost', '?')})"
-                pilot_line_base = f"{ship_emoji} {ini_emoji} **[{pilot_name}]({pilot_image})**{pilot_cost_str}"
+                pilot_line_base = f"{ship_emoji} {ini_emoji}"
+                pilot_line_base += f"**[{pilot_name}]({pilot_image})**"
+                pilot_line_base += f" {pilot_cost_str}"
 
-                # Upgrades Line
                 upgrade_display_parts = []
                 for upg in upgrades:
                     cost = calculate_upgrade_cost(upg, ship, pilot)
@@ -441,14 +411,14 @@ async def on_message(message: discord.Message):
                         pilot_total_cost += cost
                     cost_str = f"({cost})" if cost is not None else "(?)"
                     upg_name = upg.get("name", "Unknown Upgrade")
-                    img_url = GOLDENROD_UPGRADES_URL  # Default
+                    img_url = GOLDENROD_UPGRADES_URL
                     try:
                         if upg.get("sides") and upg["sides"][0]:
                             img_url = upg["sides"][0].get(
                                 "image", GOLDENROD_UPGRADES_URL
                             )
                     except (IndexError, KeyError, TypeError):
-                        pass  # Ignore errors getting image
+                        pass
                     upgrade_display_parts.append(
                         f"[{upg_name}]({img_url}){cost_str}"
                     )
@@ -458,33 +428,31 @@ async def on_message(message: discord.Message):
                     if upgrade_display_parts
                     else ""
                 )
-
                 if upgrades_formatted == "":
-                    final_pilot_line = (
-                        f"{pilot_line_base}{upgrades_formatted}\n"
-                    )
+                    pilot_total_str = ""
                 else:
-                    final_pilot_line = f"{pilot_line_base}{upgrades_formatted}"
-                    final_pilot_line += f" __**[{pilot_total_cost}]**__\n"
+                    pilot_total_str = f" __**[{pilot_total_cost}]**__"
 
-                # Embed splitting logic
+                final_pilot_line = (
+                    f"{pilot_line_base}{upgrades_formatted}{pilot_total_str}\n"
+                )
+
                 if (
                     len(current_description) + len(final_pilot_line)
                     > DISCORD_EMBED_DESCRIPTION_LIMIT
                 ):
                     embed = discord.Embed(
                         description=current_description,
-                        color=discord.Color.blue(),
+                        color=faction_color,
                     )
                     embeds_to_send.append(embed)
                     current_description = final_pilot_line
                 else:
                     current_description += final_pilot_line
 
-            # Add final embed
             if current_description:
                 embed = discord.Embed(
-                    description=current_description, color=discord.Color.blue()
+                    description=current_description, color=faction_color
                 )
                 embeds_to_send.append(embed)
 
@@ -520,39 +488,47 @@ async def on_message(message: discord.Message):
                 logger.info("Finished sending embeds.", extra=log_context)
 
         except Exception as e:
-            # Catch-all for unexpected errors during processing inside the lock
             logger.error(
                 f"Unexpected error during processing: {e}",
                 extra=log_context,
                 exc_info=True,
             )
             await message.channel.send(
-                f"Sorry {message.author.mention}, an unexpected error occurred while processing the list."
+                f"Sorry {message.author.mention}, an unexpected error occurred."
             )
         finally:
-            # Ensure lock release is logged even if errors occur
             logger.info("Released lock", extra=log_context)
 
 
 # --- Bot Startup ---
-if __name__ == "__main__":  # Good practice guard
+if __name__ == "__main__":
     if not DISCORD_TOKEN or DISCORD_TOKEN == "YOUR_REAL_BOT_TOKEN":
         logger.critical("FATAL: Discord bot token is missing or placeholder!")
         exit("Discord token configuration error.")
 
     try:
-        logger.info("Preparing data collections...")
-        prepare_collections(XWS_DATA_ROOT_DIR, MONGODB_URI)
+        # --- Reinstate prepare_collections call ---
+        logger.info("Preparing data collections (if needed)...")
+        prepare_collections(
+            XWS_DATA_ROOT_DIR, MONGODB_URI
+        )  # Pass required vars
+        logger.info("Data collections prepared.")
+        # --- End reinstate ---
+
         logger.info("Starting bot...")
         bot.run(DISCORD_TOKEN)
     except discord.errors.LoginFailure:
         logger.critical("FATAL: Improper token passed.")
         exit("Discord login failed.")
+    # --- Reinstate FileNotFoundError ---
     except FileNotFoundError:
         logger.critical(
             f"FATAL: Could not find XWS data directory: {XWS_DATA_ROOT_DIR}"
         )
         exit("XWS data directory not found.")
+    # --- End reinstate ---
     except Exception as e:
         logger.critical(f"FATAL: Bot run failed: {e}", exc_info=True)
         exit("Unexpected error during bot startup.")
+    # finally: # Optional: Graceful DB connection closing on exit
+    #     close_db_connection()

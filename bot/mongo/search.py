@@ -1,126 +1,121 @@
+# Presumed location: bot/mongo/search.py
+
+import logging
 from pymongo import MongoClient
 from pymongo.server_api import ServerApi
+import os
+
+# --- Get MongoDB URI ---
+MONGODB_URI = os.getenv(
+    "MONGODB_URI",
+    "mongodb://root:example@localhost:27017/xwingdata?authSource=admin",
+)
+
+logger = logging.getLogger(__name__)
+
+# --- Create Persistent MongoDB Client and Collections ---
+try:
+    client = MongoClient(MONGODB_URI, server_api=ServerApi("1"))
+    client.admin.command("ping")
+    logger.info("Successfully connected to MongoDB.")
+    xws_db = client["xwing-data2"]
+    pilots_collection = xws_db["pilots"]
+    upgrades_collection = xws_db["upgrades"]
+    factions_collection = xws_db["factions"]
+except Exception as e:
+    logger.critical(
+        f"FATAL: Failed to connect to MongoDB at {MONGODB_URI}: {e}",
+        exc_info=True,
+    )
+    pilots_collection = upgrades_collection = factions_collection = (
+        None  # Set to None on failure
+    )
 
 
-def find_pilot(xws, mongodb_uri):
-    """
-    Finds a pilot in the 'pilots' collection by their xws name.
-    Args:
-        xws (str): The xws name of the pilot to search for.
-        mongodb_uri (str): The MongoDB URI to connect to.
-    Returns:
-        dict: A dictionary containing the pilot's data if found.
-    Raises:
-        ValueError: If no pilot with the given xws name is found.
-    """
+# --- Index Recommendation ---
+# For optimal query performance, ensure MongoDB indexes are created on:
+# - pilots collection: index on "pilots.xws"
+# - upgrades collection: index on "xws"
+# - factions collection: index on "xws"
 
-    client = MongoClient(mongodb_uri, server_api=ServerApi("1"))
+
+def find_pilot(xws: str):
+    """Finds a pilot's data within the nested structure using its xws name."""
+    # --- FIX: Use 'is None' for collection check ---
+    if pilots_collection is None:
+        logger.error("MongoDB pilots_collection not available.")
+        return None
     try:
-        xws_db = client["xwing-data2"]
-        pilots_collection = xws_db["pilots"]
+        doc = pilots_collection.find_one(
+            {"pilots.xws": xws}, {"pilots.$": 1, "_id": 0}
+        )
+        if doc and "pilots" in doc and doc["pilots"]:
+            return doc["pilots"][0]
+        else:
+            logger.warning(f"Pilot with xws '{xws}' not found in database.")
+            return None
+    except Exception as e:
+        logger.error(f"Error querying pilot '{xws}': {e}", exc_info=True)
+        return None
 
-        pilot_data = list(
-            pilots_collection.find(
-                {"pilots.xws": xws}, {"pilots.$": 1, "_id": 0}
+
+def find_upgrade(xws: str):
+    """Finds an upgrade by its xws name using the global connection."""
+    # --- FIX: Use 'is None' for collection check ---
+    if upgrades_collection is None:
+        logger.error("MongoDB upgrades_collection not available.")
+        return None
+    try:
+        upgrade_data = upgrades_collection.find_one({"xws": xws}, {"_id": 0})
+        if not upgrade_data:
+            logger.warning(f"Upgrade with xws '{xws}' not found in database.")
+        return upgrade_data
+    except Exception as e:
+        logger.error(f"Error querying upgrade '{xws}': {e}", exc_info=True)
+        return None
+
+
+def find_ship_by_pilot(xws: str):
+    """
+    Finds the ship data (parent document) associated with a pilot
+    using the pilot's xws name and the global connection.
+    """
+    # --- FIX: Use 'is None' for collection check ---
+    if pilots_collection is None:  # Check the correct collection variable
+        logger.error("MongoDB pilots_collection not available.")
+        return None
+    try:
+        ship_data = pilots_collection.find_one({"pilots.xws": xws}, {"_id": 0})
+        if not ship_data:
+            logger.warning(
+                f"Ship data for pilot xws '{xws}' not found (pilot document missing)."
             )
+        return ship_data
+    except Exception as e:
+        logger.error(
+            f"Error querying ship for pilot '{xws}': {e}", exc_info=True
         )
-        if pilot_data:
-            return pilot_data[0]["pilots"][0]
-        else:
-            raise ValueError(f"Pilot with xws name '{xws}' not found.")
-    finally:
-        client.close()
+        return None
 
 
-def find_upgrade(xws, mongodb_uri):
-    """
-    Finds an upgrade in the 'upgrades' collection by its xws name.
-
-    Args:
-        xws (str): The xws name of the upgrade to search for.
-        mongodb_uri (str): The MongoDB URI to connect to.
-
-    Returns:
-        dict: A dictionary containing the upgrade's data if found.
-
-    Raises:
-        ValueError: If no upgrade with the given xws name is found.
-    """
-    client = MongoClient(mongodb_uri, server_api=ServerApi("1"))
+def find_faction(xws: str):
+    """Finds a faction by its xws name using the global connection."""
+    # --- FIX: Use 'is None' for collection check ---
+    if factions_collection is None:
+        logger.error("MongoDB factions_collection not available.")
+        return None
     try:
-        xws_db = client["xwing-data2"]
-        upgrades_collection = xws_db["upgrades"]
-
-        upgrade_data = list(
-            upgrades_collection.find(
-                {"xws": xws}, {"_id": 0}
-            )
-        )
-        if upgrade_data:
-            return upgrade_data[0]
-        else:
-            raise ValueError(f"Upgrade with xws name '{xws}' not found.")
-    finally:
-        client.close()
+        faction_data = factions_collection.find_one({"xws": xws}, {"_id": 0})
+        if not faction_data:
+            logger.warning(f"Faction with xws '{xws}' not found in database.")
+        return faction_data
+    except Exception as e:
+        logger.error(f"Error querying faction '{xws}': {e}", exc_info=True)
+        return None
 
 
-def find_ship_by_pilot(xws, mongodb_uri):
-    """
-    Finds the ship data associated with a pilot by the pilot's xws name.
-
-    Args:
-        xws (str): The xws name of the pilot to search for.
-        mongodb_uri (str): The MongoDB URI to connect to.
-
-    Returns:
-        dict: A dictionary containing the ship data associated with the pilot if found.
-
-    Raises:
-        ValueError: If no pilot with the given xws name is found.
-    """
-    client = MongoClient(mongodb_uri, server_api=ServerApi("1"))
-    try:
-        xws_db = client["xwing-data2"]
-        pilots_collection = xws_db["pilots"]
-
-        pilot_data = list(
-            pilots_collection.find(
-                {"pilots.xws": xws}, {"_id": 0}
-            )
-        )
-        if pilot_data:
-            return pilot_data[0]
-        else:
-            raise ValueError(f"Pilot with xws name '{xws}' not found.")
-    finally:
-        client.close()
-
-
-def find_faction(xws, mongodb_uri):
-    """
-    Finds a faction by its xws name.
-
-    Args:
-        xws (str): The xws name of the faction to search for.
-        mongodb_uri (str): The MongoDB URI to connect to.
-
-    Returns:
-        dict: A dictionary containing the faction's data if found.
-
-    Raises:
-        ValueError: If no faction with the given xws name is found.
-    """
-    client = MongoClient(mongodb_uri, server_api=ServerApi("1"))
-    try:
-        xws_db = client["xwing-data2"]
-        factions_collection = xws_db["factions"]
-
-        faction_data = list(
-            factions_collection.find({"xws": xws}, {"_id": 0})
-        )
-        if faction_data:
-            return faction_data[0]
-        else:
-            raise ValueError(f"Faction with xws name '{xws}' not found.")
-    finally:
-        client.close()
+# Optional: Add a function to close the client connection gracefully on shutdown
+# def close_db_connection():
+#     if client:
+#         client.close()
+#         logger.info("MongoDB connection closed.")
