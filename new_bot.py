@@ -14,7 +14,7 @@ from bot.mongo.search import (
     find_ship_by_pilot,
     find_upgrade,
 )
-from bot.xws2pretty import component_emojis, ship_emojis
+from bot.xws2pretty import ini_emojis, ship_emojis
 
 load_dotenv()
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -351,7 +351,7 @@ async def on_message(message: discord.Message):
 
             pilot_line_base = (
                 f"{ship_emojis[ship_details['xws']]} "
-                f"{component_emojis[pilot['initiative']]} "
+                f"{ini_emojis[pilot['initiative']]} "
                 f"**[{pilot['name']}]({pilot['image']})**({pilot['cost']})"
             )
 
