@@ -204,9 +204,6 @@ async def on_message(message: discord.Message):
         if not isinstance(upgrade_data, dict):
             return None
         cost_obj = upgrade_data.get("cost")
-        if not isinstance(cost_obj, dict):
-            # No cost object found
-            return None
 
         # Case 1: Simple {'value': X} cost
         if "value" in cost_obj:
