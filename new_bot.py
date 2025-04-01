@@ -8,7 +8,12 @@ import requests
 from dotenv import load_dotenv
 
 from bot.mongo.init_db import prepare_collections
-from bot.mongo.search import find_faction, find_pilot, find_ship_by_pilot
+from bot.mongo.search import (
+    find_faction,
+    find_pilot,
+    find_ship_by_pilot,
+    find_upgrade,
+)
 from bot.xws2pretty import component_emojis, ship_emojis
 
 load_dotenv()
@@ -178,6 +183,92 @@ async def on_message(message: discord.Message):
         except ValueError:
             return  # Failure of integer conversion implies URL format is off
 
+    def get_ship_stat_value(stats_list, stat_type_to_find):
+        """Safely extracts a specific stat value (like agility) from the ship's stats list."""
+        if not isinstance(stats_list, list):
+            return None
+        for stat in stats_list:
+            # Ensure stat is a dictionary before accessing keys
+            if (
+                isinstance(stat, dict)
+                and stat.get("type") == stat_type_to_find
+            ):
+                return stat.get("value")  # Return the value if type matches
+        return None  # Stat type not found
+
+    def calculate_upgrade_cost(upgrade_data, ship_details, pilot_info):
+        """
+        Calculates the cost of an upgrade based on its potentially complex cost structure.
+        Returns the integer cost or None if undetermined.
+        """
+        if not isinstance(upgrade_data, dict):
+            return None
+        cost_obj = upgrade_data.get("cost")
+        if not isinstance(cost_obj, dict):
+            # No cost object found
+            return None
+
+        # Case 1: Simple {'value': X} cost
+        if "value" in cost_obj:
+            try:
+                # Directly return the integer value
+                return int(cost_obj["value"])
+            except (ValueError, TypeError):
+                # Value wasn't a valid integer representation
+                return None
+
+        # Case 2: Variable cost {'variable': '...', 'values': {...}}
+        if "variable" in cost_obj:
+            variable_type = cost_obj.get("variable")
+            values_dict = cost_obj.get("values")
+            if not isinstance(values_dict, dict):
+                # Malformed variable cost structure
+                return None
+
+            lookup_key = None
+            # Determine the key needed to look up the cost in values_dict
+            if variable_type == "size":
+                # Key is ship size (e.g., "Small", "Medium")
+                lookup_key = ship_details.get("size")
+            elif variable_type == "agility":
+                # Key is ship agility (e.g., "0", "1", "2")
+                # Need to extract agility from ship_details['stats']
+                agility = get_ship_stat_value(
+                    ship_details.get("stats"), "agility"
+                )
+                if agility is not None:
+                    lookup_key = str(
+                        agility
+                    )  # Keys in values_dict are usually strings
+            elif variable_type == "initiative":
+                # Key is pilot initiative (e.g., "0", "1", ..., "6")
+                initiative = pilot_info.get("initiative")
+                if initiative is not None:
+                    lookup_key = str(
+                        initiative
+                    )  # Keys in values_dict are usually strings
+            # Add other variable types here if needed (e.g., 'hull', etc.)
+
+            if lookup_key is not None:
+                # We have a key, now look up the cost in the values dictionary
+                raw_cost = values_dict.get(lookup_key)
+                if raw_cost is not None:
+                    try:
+                        # Convert the found cost to integer
+                        return int(raw_cost)
+                    except (ValueError, TypeError):
+                        # Value associated with the key wasn't a valid integer
+                        return None
+                else:
+                    # The specific key (e.g., "Huge" or agility "3") wasn't in values_dict
+                    return None
+            else:
+                # Could not determine the lookup key (e.g., ship size missing)
+                return None
+
+        # If neither 'value' nor 'variable' key was found in cost_obj
+        return None
+
     # --- Data Extraction Start ---
     try:
         # 1. Get Faction
@@ -199,8 +290,28 @@ async def on_message(message: discord.Message):
         else:
             bid = None
 
-        pilots_details = [
-            find_pilot(pilot["id"], MONGODB_URI)
+        # pilots_details = [
+        #     find_pilot(pilot["id"], MONGODB_URI)
+        #     for pilot in xws_dict["pilots"]
+        # ]
+
+        list_details = [
+            {
+                # Fetch pilot details using the pilot's 'id'
+                "pilot_info": find_pilot(pilot["id"], MONGODB_URI),
+                # Fetch details for all upgrades associated with this pilot
+                "upgrades_info": [
+                    find_upgrade(upgrade_id, MONGODB_URI)
+                    # Iterate through the lists of upgrade IDs found in the
+                    # pilot's 'upgrades' dictionary values
+                    for upgrade_ids_list in pilot.get("upgrades", {}).values()
+                    if isinstance(upgrade_ids_list, list)
+                    # Iterate through each individual upgrade ID within
+                    # those lists
+                    for upgrade_id in upgrade_ids_list
+                ],
+            }
+            # Iterate through each pilot dictionary in the main 'pilots' list
             for pilot in xws_dict["pilots"]
         ]
         # --- Data Extraction End ---
@@ -224,15 +335,77 @@ async def on_message(message: discord.Message):
         )
         embed_description = embed_list_title
 
-        for pilot in pilots_details:
+        for pilot_data in list_details:
+            pilot = pilot_data["pilot_info"]
+            upgrades = pilot_data["upgrades_info"]
             ship_details = find_ship_by_pilot(pilot["xws"], MONGODB_URI)
-            pilot_card_image = f"{GOLDENROD_PILOTS_URL}{pilot['xws']}.png"
-            pilot_line = (
+
+            # --- Initialize Total Cost variable ---
+            current_pilot_total_cost = 0
+            try:
+                current_pilot_total_cost += int(pilot["cost"])
+            except (ValueError, TypeError, KeyError):
+                print(
+                    f"Warning: Could not parse pilot cost for {pilot.get('name', 'Unknown Pilot')}"
+                )
+
+            pilot_line_base = (
                 f"{ship_emojis[ship_details['xws']]} "
                 f"{component_emojis[pilot['initiative']]} "
-                f"**[{pilot['name']}]({pilot_card_image})**\n"
+                f"**[{pilot['name']}]({pilot['image']})**({pilot['cost']})"
             )
-            embed_description += pilot_line
+
+            if upgrades:
+                upgrade_display_parts = []  # To store each "[Name](URL) (Cost)" part
+
+                for upg in upgrades:
+                    # --- Calculate Cost ---
+                    cost = calculate_upgrade_cost(upg, ship_details, pilot)
+                    if cost is not None:
+                        # Add valid upgrade costs to the running total
+                        current_pilot_total_cost += cost
+                    else:
+                        # Optional: Log a warning if an upgrade cost couldn't be determined
+                        print(
+                            f"Warning: Could not determine cost for upgrade "
+                            f"{upg.get('name', 'Unknown Upgrade')} "
+                            f"on pilot {pilot.get('name', 'Unknown Pilot')}"
+                        )
+
+                    # Format cost string: "(X)" or "(?)" if cost is None
+                    cost_str = f"({cost})" if cost is not None else "(?)"
+
+                    # --- Get Image URL --- (using logic from previous steps)
+                    sides_list = upg.get("sides", [])
+                    image_url = (
+                        sides_list[0].get("image", "{GOLDENROD_UPGRADES_URL}")
+                        if sides_list
+                        else "{GOLDENROD_UPGRADES_URL}"
+                    )
+                    upgrade_name = upg.get("name", "Unknown Upgrade")
+
+                    # --- Create Link + Cost String ---
+                    link_part = f"[{upgrade_name}]({image_url})"
+                    # Combine link and cost: e.g., "[Hopeful](url) (1)"
+                    display_string = f"{link_part} {cost_str}"
+
+                    upgrade_display_parts.append(display_string)
+
+                # Join all upgrade parts with ", ", add leading ": " and wrap in italics
+                if upgrade_display_parts:
+                    upgrades_formatted = (
+                        f": *{', '.join(upgrade_display_parts)}*"
+                    )
+            else:
+                upgrades_formatted = ""
+
+            if upgrades_formatted == "":
+                final_pilot_line = f"{pilot_line_base}"
+            else:
+                final_pilot_line = f"{pilot_line_base}{upgrades_formatted}"
+                final_pilot_line += f" __**[{current_pilot_total_cost}]**__\n"
+            embed_description += final_pilot_line
+
         embed = discord.Embed(
             description=embed_description,
             color=discord.Color.blue(),  # Optional: set a color
@@ -242,11 +415,11 @@ async def on_message(message: discord.Message):
             icon_url=message.author.display_avatar.url,
         )
         # You could add the original YASB link as a field or in the description
-        embed.add_field(
-            name="Original Link",
-            value=f"[View on YASB]({found_url})",
-            inline=False,
-        )
+        # embed.add_field(
+        #     name="Original Link",
+        #     value=f"[View on YASB]({found_url})",
+        #     inline=False,
+        # )
         await message.channel.send(embed=embed)
 
     except Exception as e:
