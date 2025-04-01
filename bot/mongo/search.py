@@ -34,16 +34,18 @@ def find_pilot(xws, mongodb_uri):
 
 def find_upgrade(xws, mongodb_uri):
     """
-    Finds a pilot in the 'pilots' collection by their xws name.
-    Args:
-        xws (str): The xws name of the pilot to search for.
-        mongodb_uri (str): The MongoDB URI to connect to.
-    Returns:
-        dict: A dictionary containing the pilot's data if found.
-    Raises:
-        ValueError: If no pilot with the given xws name is found.
-    """
+    Finds an upgrade in the 'upgrades' collection by its xws name.
 
+    Args:
+        xws (str): The xws name of the upgrade to search for.
+        mongodb_uri (str): The MongoDB URI to connect to.
+
+    Returns:
+        dict: A dictionary containing the upgrade's data if found.
+
+    Raises:
+        ValueError: If no upgrade with the given xws name is found.
+    """
     client = MongoClient(mongodb_uri, server_api=ServerApi("1"))
     try:
         xws_db = client["xwing-data2"]
@@ -51,11 +53,11 @@ def find_upgrade(xws, mongodb_uri):
 
         upgrade_data = list(
             upgrades_collection.find(
-                {"pilots.xws": xws}, {"pilots.$": 1, "_id": 0}
+                {"xws": xws}, {"_id": 0}
             )
         )
         if upgrade_data:
-            return upgrade_data[0]["pilots"][0]
+            return upgrade_data[0]
         else:
             raise ValueError(f"Upgrade with xws name '{xws}' not found.")
     finally:
@@ -63,6 +65,19 @@ def find_upgrade(xws, mongodb_uri):
 
 
 def find_ship_by_pilot(xws, mongodb_uri):
+    """
+    Finds the ship data associated with a pilot by the pilot's xws name.
+
+    Args:
+        xws (str): The xws name of the pilot to search for.
+        mongodb_uri (str): The MongoDB URI to connect to.
+
+    Returns:
+        dict: A dictionary containing the ship data associated with the pilot if found.
+
+    Raises:
+        ValueError: If no pilot with the given xws name is found.
+    """
     client = MongoClient(mongodb_uri, server_api=ServerApi("1"))
     try:
         xws_db = client["xwing-data2"]
@@ -82,6 +97,19 @@ def find_ship_by_pilot(xws, mongodb_uri):
 
 
 def find_faction(xws, mongodb_uri):
+    """
+    Finds a faction by its xws name.
+
+    Args:
+        xws (str): The xws name of the faction to search for.
+        mongodb_uri (str): The MongoDB URI to connect to.
+
+    Returns:
+        dict: A dictionary containing the faction's data if found.
+
+    Raises:
+        ValueError: If no faction with the given xws name is found.
+    """
     client = MongoClient(mongodb_uri, server_api=ServerApi("1"))
     try:
         xws_db = client["xwing-data2"]
@@ -93,6 +121,6 @@ def find_faction(xws, mongodb_uri):
         if faction_data:
             return faction_data[0]
         else:
-            raise ValueError(f"Pilot with xws name '{xws}' not found.")
+            raise ValueError(f"Faction with xws name '{xws}' not found.")
     finally:
         client.close()
