@@ -2,24 +2,23 @@ import asyncio
 import json
 import logging
 import os
-import re
 import random
+import re
 
 import discord
 import requests
+from discord import ButtonStyle, Interaction
+from discord.ui import Button, View, button
 from dotenv import load_dotenv
 
-# Assuming these are correctly defined/imported
-# --- reinstate prepare_collections import ---
 from bot.mongo.init_db import prepare_collections
 from bot.mongo.search import (
     find_faction,
     find_pilot,
     find_ship_by_pilot,
     find_upgrade,
-    # Optional: close_db_connection # if you implement graceful shutdown
 )
-from bot.xws2pretty import ini_emojis, ship_emojis, convert_faction_to_color
+from bot.xws2pretty import convert_faction_to_color, ini_emojis, ship_emojis
 
 # --- Configuration & Constants ---
 load_dotenv()
@@ -33,7 +32,7 @@ RB_ENDPOINT = os.getenv(
     "RB_ENDPOINT",
     "https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy?",
 )
-# --- XWS_DATA_ROOT_DIR needed for prepare_collections ---
+# --- XWS_DATA_ROOT_DIR  for prepare_collections ---
 XWS_DATA_ROOT_DIR = "submodules/xwing-data2/data"
 GOLDENROD_PILOTS_URL = (
     "https://github.com/SogeMoge/x-wing2.0-project-goldenrod/blob/2.0/"
@@ -56,7 +55,6 @@ MODE_MAPPING = {
 }
 
 FOOTER_PHRASES = [
-    # ... (Your list of 40 phrases remains the same) ...
     "Processing complete. List provided by:",
     "Analysis concluded for squadron designation submitted by:",
     "Data formatted as requested for unit:",
@@ -100,7 +98,6 @@ FOOTER_PHRASES = [
 ]
 
 # --- Logging Setup ---
-# ... (Logging setup remains the same) ...
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 log_file = "xwsbot.log"
@@ -115,7 +112,6 @@ logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
 
 # --- Discord Bot Setup ---
-# ... (Intents and Bot definition remain the same) ...
 intents = discord.Intents.default()
 intents.messages = True
 intents.message_content = True
@@ -196,6 +192,177 @@ def calculate_upgrade_cost(upgrade_data, ship_details, pilot_info):
     return None
 
 
+# --- Confirmation Button View ---
+class ConfirmationView(View):
+    def __init__(self, original_message: discord.Message, *, timeout=120):
+        super().__init__(timeout=timeout)
+        self.original_message = original_message
+        self.interaction_user_id = original_message.author.id
+        self.message_deleted = None
+        self.button_message: discord.Message | None = None
+
+    async def interaction_check(self, interaction: Interaction) -> bool:
+        if interaction.user.id != self.interaction_user_id:
+            await interaction.response.send_message(
+                "Directive override: Only the originator of the list may utilize these controls.",
+                ephemeral=True,
+            )
+            return False
+        return True
+
+    # Helper to attempt message deletion safely
+    async def _delete_button_message(self, log_context):
+        if self.button_message:
+            try:
+                await self.button_message.delete()
+                logger.info(
+                    f"Deleted button message {self.button_message.id}.",
+                    extra=log_context,
+                )
+            except discord.NotFound:
+                logger.warning(
+                    f"Could not delete button message "
+                    f"{self.button_message.id} (already deleted).",
+                    extra=log_context,
+                )
+            except discord.Forbidden:
+                logger.error(
+                    f"Permission error deleting button message "
+                    f"{self.button_message.id}.",
+                    extra=log_context,
+                )
+            except discord.HTTPException as e:
+                logger.error(
+                    f"HTTP error deleting button message "
+                    f"{self.button_message.id}: {e}",
+                    extra=log_context,
+                )
+            except Exception as e_del_btn_other:
+                logger.error(
+                    f"Unexpected error deleting button message "
+                    f"{self.button_message.id}: {e_del_btn_other}",
+                    extra=log_context,
+                    exc_info=True,
+                )
+            finally:
+                # Avoid trying to delete again on timeout if already handled
+                self.button_message = (
+                    None  # Clear reference after attempting delete
+                )
+
+    @button(
+        label="Yes (Delete Original)",
+        style=ButtonStyle.success,
+        custom_id="confirm_delete_yes",
+    )
+    async def yes_button_callback(
+        self, button_obj: Button, interaction: Interaction
+    ):
+        log_context = {
+            "channel_id": interaction.channel_id,
+            "user_id": interaction.user.id,
+        }
+        logger.info(
+            f"User clicked YES for original message {self.original_message.id}",
+            extra=log_context,
+        )
+        await interaction.response.defer(ephemeral=True)
+
+        confirmation_text = ""
+        try:
+            await self.original_message.delete()
+            logger.info(
+                f"Original message {self.original_message.id} deleted successfully.",
+                extra=log_context,
+            )
+            self.message_deleted = True
+        except discord.Forbidden:
+            logger.error(
+                f"Permission denied deleting message {self.original_message.id}",
+                extra=log_context,
+            )
+            confirmation_text = "Negative. This unit lacks authorization (permissions) to delete the specified message."
+            self.message_deleted = False
+        except discord.NotFound:
+            logger.warning(
+                f"Original message {self.original_message.id} not found.",
+                extra=log_context,
+            )
+            confirmation_text = "Analysis indicates the original message no longer exists in the channel records."
+            self.message_deleted = None
+        except Exception as e:
+            logger.error(
+                f"Error deleting message {self.original_message.id}: {e}",
+                extra=log_context,
+                exc_info=True,
+            )
+            confirmation_text = "Critical error encountered during message deletion sub-routine."
+            self.message_deleted = False
+
+        try:
+            await interaction.delete_original_response()
+        except discord.HTTPException as e:
+            logger.warning(
+                f"Could not edit ephemeral confirmation message (likely dismissed or timed out): {e}",
+                extra=log_context,
+            )
+
+        if confirmation_text:
+            await interaction.followup.send(
+                content=confirmation_text, ephemeral=True
+            )
+        await self._delete_button_message(log_context)
+        self.stop()
+
+    @button(
+        label="No (Keep Original)",
+        style=ButtonStyle.danger,
+        custom_id="confirm_delete_no",
+    )
+    async def no_button_callback(
+        self, button_obj: Button, interaction: Interaction
+    ):
+        log_context = {
+            "channel_id": interaction.channel_id,
+            "user_id": interaction.user.id,
+        }
+        logger.info(
+            f"User clicked NO for original message {self.original_message.id}",
+            extra=log_context,
+        )
+        await interaction.response.defer(ephemeral=True)
+
+        confirmation_text = ""
+        self.message_deleted = False
+
+        try:
+            await interaction.delete_original_response()
+        except discord.HTTPException as e:
+            logger.warning(
+                f"Could not edit ephemeral confirmation message (likely dismissed or timed out): {e}",
+                extra=log_context,
+            )
+
+        if confirmation_text:
+            await interaction.followup.send(
+                content=confirmation_text, ephemeral=True
+            )
+        await self._delete_button_message(log_context)
+        self.stop()
+
+    async def on_timeout(self):
+        log_context = {
+            "channel_id": self.original_message.channel.id
+            if self.original_message
+            else "Unknown"
+        }
+        logger.info(
+            f"Confirmation view for original message {self.original_message.id if self.original_message else 'Unknown'} timed out.",
+            extra=log_context,
+        )
+        await self._delete_button_message(log_context)
+
+
 # --- Bot Events ---
 @bot.event
 async def on_ready():
@@ -245,17 +412,20 @@ async def on_message(message: discord.Message):
                     exc_info=True,
                 )
                 await message.channel.send(
-                    f"Sorry {message.author.mention}, I couldn't retrieve list data."
+                    f"Sorry {message.author.mention}, "
+                    "I couldn't retrieve list data."
                 )
                 return
             except json.JSONDecodeError as e:
                 logger.error(
-                    f"Failed to decode JSON response: {e}. Response text: {response.text[:500]}...",
+                    f"Failed to decode JSON response: {e}. "
+                    f"Response text: {response.text[:500]}...",
                     extra=log_context,
                     exc_info=True,
                 )
                 await message.channel.send(
-                    f"Sorry {message.author.mention}, I couldn't understand the list format."
+                    f"Sorry {message.author.mention}, "
+                    "I couldn't understand the list format."
                 )
                 return
 
@@ -269,13 +439,12 @@ async def on_message(message: discord.Message):
             if not faction_xws:
                 logger.error("Faction missing in XWS data.", extra=log_context)
                 await message.channel.send(
-                    f"Sorry {message.author.mention}, list data incomplete (missing faction)."
+                    f"Sorry {message.author.mention}, "
+                    "list data incomplete (missing faction)."
                 )
                 return
 
-            faction_details = find_faction(
-                faction_xws
-            )  # Uses global DB connection
+            faction_details = find_faction(faction_xws)
             if not faction_details:
                 faction_details = {
                     "name": faction_xws.replace("_", " ").title()
@@ -322,13 +491,11 @@ async def on_message(message: discord.Message):
                 if not pilot_id:
                     continue
 
-                pilot_info = find_pilot(pilot_id)  # Uses global DB connection
+                pilot_info = find_pilot(pilot_id)
                 if not pilot_info:
                     continue
 
-                ship_details = find_ship_by_pilot(
-                    pilot_info.get("xws")
-                )  # Uses global DB connection
+                ship_details = find_ship_by_pilot(pilot_info.get("xws"))
                 if not ship_details:
                     ship_details = {
                         "xws": "unknown",
@@ -487,6 +654,29 @@ async def on_message(message: discord.Message):
                     await message.channel.send(embed=embed)
                 logger.info("Finished sending embeds.", extra=log_context)
 
+                # --- Send Confirmation Buttons ---
+                try:
+                    view = ConfirmationView(
+                        original_message=message
+                    )  # Pass the original user message
+                    sent_button_message = await message.channel.send(
+                        f"Query for {message.author.display_name}: "
+                        " Delete original message containing the YASB link?",
+                        view=view,
+                    )
+                    view.button_message = sent_button_message
+                    logger.info(
+                        f"Sent confirmation buttons for message {message.id}",
+                        extra=log_context,
+                    )
+                except Exception as e_view:
+                    logger.error(
+                        f"Failed to send confirmation buttons: {e_view}",
+                        extra=log_context,
+                        exc_info=True,
+                    )
+                # --- End Send Confirmation ---
+
         except Exception as e:
             logger.error(
                 f"Unexpected error during processing: {e}",
@@ -494,7 +684,8 @@ async def on_message(message: discord.Message):
                 exc_info=True,
             )
             await message.channel.send(
-                f"Sorry {message.author.mention}, an unexpected error occurred."
+                f"Sorry {message.author.mention}, "
+                "an unexpected error occurred."
             )
         finally:
             logger.info("Released lock", extra=log_context)
