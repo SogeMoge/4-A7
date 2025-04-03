@@ -1,16 +1,14 @@
 import asyncio
 import json
 import logging
-import os
 import random
-import re
 
 import discord
 import requests
 from discord import ButtonStyle, Interaction
 from discord.ui import Button, View, button
-from dotenv import load_dotenv
 
+from bot import config
 from bot.mongo.init_db import prepare_collections
 from bot.mongo.search import (
     find_faction,
@@ -19,83 +17,6 @@ from bot.mongo.search import (
     find_upgrade,
 )
 from bot.xws2pretty import convert_faction_to_color, ini_emojis, ship_emojis
-
-# --- Configuration & Constants ---
-load_dotenv()
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-# --- MONGODB_URI for prepare_collections ---
-MONGODB_URI = os.getenv(
-    "MONGODB_URI",
-    "mongodb://root:example@localhost:27017/xwingdata?authSource=admin",
-)
-RB_ENDPOINT = os.getenv(
-    "RB_ENDPOINT",
-    "https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy?",
-)
-# --- XWS_DATA_ROOT_DIR  for prepare_collections ---
-XWS_DATA_ROOT_DIR = "submodules/xwing-data2/data"
-GOLDENROD_PILOTS_URL = (
-    "https://github.com/SogeMoge/x-wing2.0-project-goldenrod/blob/2.0/"
-    "src/images/En/pilots/"
-)
-GOLDENROD_UPGRADES_URL = (
-    "https://github.com/SogeMoge/x-wing2.0-project-goldenrod/blob/2.0/"
-    "src/images/En/upgrades/"
-)
-DISCORD_EMBED_DESCRIPTION_LIMIT = 4096
-YASB_URL_PATTERN = re.compile(
-    r"https?:\/\/xwing-legacy\.com\/(preview)?\/?\?f=[^\s]+"
-)
-MODE_URL_PATTERN = re.compile(r"&d=v8Z[sheq]Z\d*Z")
-MODE_MAPPING = {
-    "s": "Standard",
-    "h": "Wildspace",
-    "e": "Epic",
-    "q": "Quickbuild",
-}
-
-FOOTER_PHRASES = [
-    "Processing complete. List provided by:",
-    "Analysis concluded for squadron designation submitted by:",
-    "Data formatted as requested for unit:",
-    "Calculation successful. Originator identified as:",
-    "Cross-referencing protocols engaged. Input attributed to:",
-    "This unit has prepared the manifest received from:",
-    "Fulfilling primary function. Data sourced from organic designation:",
-    "Squadron configuration logged per input from:",
-    "Information processed according to standard parameters for:",
-    "Probability of data corruption minimal. List registered to:",
-    "Tactical assessment derived from input by:",
-    "Combat effectiveness calculated for squadron provided by:",
-    "Optimal configuration analyzed. Submitted by designation:",
-    "Commencing tactical display. List parameters set by:",
-    "Unit deployment follows, per directive originating from:",
-    "Logistical breakdown prepared for Confederacy Asset:",
-    "Analyzing potential engagement matrix. Data provided by:",
-    "Record updated. Squadron composition input by:",
-    "Query resolved. List compiler identified as:",
-    "Affirmative. Displaying squadron details submitted by:",
-    "Data stream decoded. Source identified as:",
-    "Input parameters verified. Originating unit:",
-    "Manifest generation initiated by:",
-    "Log entry created. Data provided by organic:",
-    "Task completed as per directive from:",
-    "This unit awaits further instruction. Current data by:",
-    "Operational efficiency dictates prompt processing for:",
-    "My function is to serve. Analysis performed for:",
-    "Executing request protocol for user designation:",
-    "Evaluating threat potential based on squadron from:",
-    "Resource allocation noted. List provided by contact:",
-    "Updating battle grid. Configuration submitted by:",
-    "Cross-referencing against known Republic tactics. Input from:",
-    "Roger, roger. Processing tactical configuration from:",
-    "For the Separatist Alliance! Squadron details logged for:",
-    "This configuration's probability of success calculated for:",
-    "Assessing synergistic values. List compiled by:",
-    "Analytical subroutines active. Processing list from:",
-    "Verifying data integrity. Submitted by unit:",
-    "Compliance noted. Squadron details follow for:",
-]
 
 # --- Logging Setup ---
 logger = logging.getLogger(__name__)
@@ -126,14 +47,14 @@ channel_locks = {}
 # --- Helper Functions ---
 def get_gamemode(yasb_url: str) -> tuple[str, int] | None:
     """Extracts game mode and point limit from YASB URL."""
-    mode_match = MODE_URL_PATTERN.search(yasb_url)
+    mode_match = config.MODE_URL_PATTERN.search(yasb_url)
     if not mode_match:
         return None
     mode_indicator = mode_match.group()
     try:
         mode_char = mode_indicator[6]
         points_str = mode_indicator[8:-1]
-        mode_name = MODE_MAPPING.get(mode_char)
+        mode_name = config.MODE_MAPPING.get(mode_char)
         if mode_name and points_str.isdigit():
             return mode_name, int(points_str)
         else:
@@ -204,7 +125,8 @@ class ConfirmationView(View):
     async def interaction_check(self, interaction: Interaction) -> bool:
         if interaction.user.id != self.interaction_user_id:
             await interaction.response.send_message(
-                "Directive override: Only the originator of the list may utilize these controls.",
+                "Directive override: Only the originator of the "
+                "list may utilize these controls.",
                 ephemeral=True,
             )
             return False
@@ -263,7 +185,8 @@ class ConfirmationView(View):
             "user_id": interaction.user.id,
         }
         logger.info(
-            f"User clicked YES for original message {self.original_message.id}",
+            "User clicked YES for original message "
+            f"{self.original_message.id}",
             extra=log_context,
         )
         await interaction.response.defer(ephemeral=True)
@@ -272,7 +195,8 @@ class ConfirmationView(View):
         try:
             await self.original_message.delete()
             logger.info(
-                f"Original message {self.original_message.id} deleted successfully.",
+                f"Original message {self.original_message.id} "
+                "deleted successfully.",
                 extra=log_context,
             )
             self.message_deleted = True
@@ -281,14 +205,17 @@ class ConfirmationView(View):
                 f"Permission denied deleting message {self.original_message.id}",
                 extra=log_context,
             )
-            confirmation_text = "Negative. This unit lacks authorization (permissions) to delete the specified message."
+            confirmation_text = "Negative. This unit lacks authorization"
+            confirmation_text += " (permissions) to delete the"
+            confirmation_text += " specified message."
             self.message_deleted = False
         except discord.NotFound:
             logger.warning(
                 f"Original message {self.original_message.id} not found.",
                 extra=log_context,
             )
-            confirmation_text = "Analysis indicates the original message no longer exists in the channel records."
+            confirmation_text = "Analysis indicates the original message"
+            confirmation_text += " no longer exists in the channel records."
             self.message_deleted = None
         except Exception as e:
             logger.error(
@@ -296,14 +223,15 @@ class ConfirmationView(View):
                 extra=log_context,
                 exc_info=True,
             )
-            confirmation_text = "Critical error encountered during message deletion sub-routine."
+            confirmation_text = "Critical error encountered during "
+            confirmation_text += "message deletion sub-routine."
             self.message_deleted = False
 
         try:
             await interaction.delete_original_response()
         except discord.HTTPException as e:
             logger.warning(
-                f"Could not edit ephemeral confirmation message (likely dismissed or timed out): {e}",
+                f"Could not delete confirmation message: {e}",
                 extra=log_context,
             )
 
@@ -339,7 +267,7 @@ class ConfirmationView(View):
             await interaction.delete_original_response()
         except discord.HTTPException as e:
             logger.warning(
-                f"Could not edit ephemeral confirmation message (likely dismissed or timed out): {e}",
+                f"Could not delete confirmation message: {e}",
                 extra=log_context,
             )
 
@@ -357,7 +285,13 @@ class ConfirmationView(View):
             else "Unknown"
         }
         logger.info(
-            f"Confirmation view for original message {self.original_message.id if self.original_message else 'Unknown'} timed out.",
+            f"Confirmation view for original message "
+            f"""{
+                self.original_message.id
+                if self.original_message
+                else "Unknown"
+            }"""
+            " timed out.",
             extra=log_context,
         )
         await self._delete_button_message(log_context)
@@ -375,7 +309,7 @@ async def on_message(message: discord.Message):
     if message.author == bot.user or not message.content:
         return
 
-    yasb_url_match = YASB_URL_PATTERN.search(message.content)
+    yasb_url_match = config.YASB_URL_PATTERN.search(message.content)
     if not yasb_url_match:
         return
 
@@ -399,7 +333,7 @@ async def on_message(message: discord.Message):
             )
 
             # --- Fetch XWS Data ---
-            rollbetter_url = RB_ENDPOINT + found_url
+            rollbetter_url = config.RB_ENDPOINT + found_url
             try:
                 response = requests.get(rollbetter_url, timeout=20)
                 response.raise_for_status()
@@ -565,7 +499,7 @@ async def on_message(message: discord.Message):
                 ship_emoji = ship_emojis.get(ship.get("xws"), "❓")
                 ini_emoji = ini_emojis.get(pilot.get("initiative"), "❓")
                 pilot_name = pilot.get("name", "Unknown Pilot")
-                pilot_image = pilot.get("image", GOLDENROD_PILOTS_URL)
+                pilot_image = pilot.get("image", config.GOLDENROD_PILOTS_URL)
                 pilot_cost_str = f"({pilot.get('cost', '?')})"
                 pilot_line_base = f"{ship_emoji} {ini_emoji}"
                 pilot_line_base += f"**[{pilot_name}]({pilot_image})**"
@@ -578,11 +512,11 @@ async def on_message(message: discord.Message):
                         pilot_total_cost += cost
                     cost_str = f"({cost})" if cost is not None else "(?)"
                     upg_name = upg.get("name", "Unknown Upgrade")
-                    img_url = GOLDENROD_UPGRADES_URL
+                    img_url = config.GOLDENROD_UPGRADES_URL
                     try:
                         if upg.get("sides") and upg["sides"][0]:
                             img_url = upg["sides"][0].get(
-                                "image", GOLDENROD_UPGRADES_URL
+                                "image", config.GOLDENROD_UPGRADES_URL
                             )
                     except (IndexError, KeyError, TypeError):
                         pass
@@ -606,7 +540,7 @@ async def on_message(message: discord.Message):
 
                 if (
                     len(current_description) + len(final_pilot_line)
-                    > DISCORD_EMBED_DESCRIPTION_LIMIT
+                    > config.DISCORD_EMBED_DESCRIPTION_LIMIT
                 ):
                     embed = discord.Embed(
                         description=current_description,
@@ -628,7 +562,7 @@ async def on_message(message: discord.Message):
                 logger.warning("No embeds generated.", extra=log_context)
             else:
                 total_embeds = len(embeds_to_send)
-                random_phrase = random.choice(FOOTER_PHRASES)
+                random_phrase = random.choice(config.FOOTER_PHRASES)
                 base_footer_text = (
                     f"{random_phrase} {message.author.display_name}"
                 )
@@ -693,7 +627,10 @@ async def on_message(message: discord.Message):
 
 # --- Bot Startup ---
 if __name__ == "__main__":
-    if not DISCORD_TOKEN or DISCORD_TOKEN == "YOUR_REAL_BOT_TOKEN":
+    if (
+        not config.DISCORD_TOKEN
+        or config.DISCORD_TOKEN == "YOUR_REAL_BOT_TOKEN"
+    ):
         logger.critical("FATAL: Discord bot token is missing or placeholder!")
         exit("Discord token configuration error.")
 
@@ -701,25 +638,24 @@ if __name__ == "__main__":
         # --- Reinstate prepare_collections call ---
         logger.info("Preparing data collections (if needed)...")
         prepare_collections(
-            XWS_DATA_ROOT_DIR, MONGODB_URI
+            config.XWS_DATA_ROOT_DIR, config.MONGODB_URI
         )  # Pass required vars
         logger.info("Data collections prepared.")
         # --- End reinstate ---
 
         logger.info("Starting bot...")
-        bot.run(DISCORD_TOKEN)
+        bot.run(config.DISCORD_TOKEN)
     except discord.errors.LoginFailure:
         logger.critical("FATAL: Improper token passed.")
         exit("Discord login failed.")
     # --- Reinstate FileNotFoundError ---
     except FileNotFoundError:
         logger.critical(
-            f"FATAL: Could not find XWS data directory: {XWS_DATA_ROOT_DIR}"
+            "FATAL: Could not find XWS data directory: "
+            f"{config.XWS_DATA_ROOT_DIR}"
         )
         exit("XWS data directory not found.")
     # --- End reinstate ---
     except Exception as e:
         logger.critical(f"FATAL: Bot run failed: {e}", exc_info=True)
         exit("Unexpected error during bot startup.")
-    # finally: # Optional: Graceful DB connection closing on exit
-    #     close_db_connection()
