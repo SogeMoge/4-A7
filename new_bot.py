@@ -3,8 +3,8 @@ import json
 import logging
 import random
 
+import aiohttp
 import discord
-import requests
 from discord import ButtonStyle, Interaction
 from discord.ui import Button, View, button
 
@@ -120,6 +120,7 @@ class ConfirmationView(View):
         self.original_message = original_message
         self.interaction_user_id = original_message.author.id
         self.message_deleted = None
+        self.button_message_deleted = False
         self.button_message: discord.Message | None = None
 
     async def interaction_check(self, interaction: Interaction) -> bool:
@@ -134,13 +135,14 @@ class ConfirmationView(View):
 
     # Helper to attempt message deletion safely
     async def _delete_button_message(self, log_context):
-        if self.button_message:
+        if self.button_message and not self.button_message_deleted:
             try:
                 await self.button_message.delete()
                 logger.info(
                     f"Deleted button message {self.button_message.id}.",
                     extra=log_context,
                 )
+                self.button_message_deleted = True
             except discord.NotFound:
                 logger.warning(
                     f"Could not delete button message "
@@ -239,7 +241,7 @@ class ConfirmationView(View):
             await interaction.followup.send(
                 content=confirmation_text, ephemeral=True
             )
-        await self._delete_button_message(log_context)
+        # await self._delete_button_message(log_context)
         self.stop()
 
     @button(
@@ -275,7 +277,6 @@ class ConfirmationView(View):
             await interaction.followup.send(
                 content=confirmation_text, ephemeral=True
             )
-        await self._delete_button_message(log_context)
         self.stop()
 
     async def on_timeout(self):
@@ -334,33 +335,87 @@ async def on_message(message: discord.Message):
 
             # --- Fetch XWS Data ---
             rollbetter_url = config.RB_ENDPOINT + found_url
-            try:
-                response = requests.get(rollbetter_url, timeout=20)
-                response.raise_for_status()
-                xws_dict = response.json()
-                logger.debug("Received XWS JSON", extra=log_context)
-            except requests.exceptions.RequestException as e:
-                logger.error(
-                    f"Failed to fetch XWS data: {e}",
-                    extra=log_context,
-                    exc_info=True,
-                )
-                await message.channel.send(
-                    f"Sorry {message.author.mention}, "
-                    "I couldn't retrieve list data."
-                )
-                return
-            except json.JSONDecodeError as e:
-                logger.error(
-                    f"Failed to decode JSON response: {e}. "
-                    f"Response text: {response.text[:500]}...",
-                    extra=log_context,
-                    exc_info=True,
-                )
-                await message.channel.send(
-                    f"Sorry {message.author.mention}, "
-                    "I couldn't understand the list format."
-                )
+            xws_dict = None
+            async with aiohttp.ClientSession() as session:
+                try:
+                    async with session.get(
+                        rollbetter_url, timeout=20
+                    ) as response:
+                        response.raise_for_status()
+                        response_text = await response.text()
+                        xws_dict = json.loads(response_text)
+                        logger.debug("Received XWS JSON", extra=log_context)
+                except (
+                    aiohttp.ClientResponseError
+                ) as e:  # Handles response.raise_for_status() errors
+                    logger.error(
+                        f"HTTP error fetching XWS data: {e.status} {e.message}",
+                        extra=log_context,
+                        exc_info=True,
+                    )
+                    return
+                except (
+                    asyncio.TimeoutError
+                ):  # aiohttp uses asyncio.TimeoutError for timeouts
+                    logger.error(
+                        f"Timeout fetching XWS data from {rollbetter_url}",
+                        extra=log_context,
+                    )
+                    return
+                except (
+                    aiohttp.ClientError
+                ) as e:  # Catches other connection errors
+                    logger.error(
+                        f"Failed to fetch XWS data (aiohttp ClientError): {e}",
+                        extra=log_context,
+                        exc_info=True,
+                    )
+                    return
+                # Catch unexpected errors during the fetch/parse block
+                except Exception as e_fetch:
+                    logger.error(
+                        f"Unexpected error during XWS fetch/parse: {e_fetch}",
+                        extra=log_context,
+                        exc_info=True,
+                    )
+                    await message.channel.send(
+                        f"Sorry {message.author.display_name}, "
+                        "an unexpected error occurred while getting list data."
+                    )
+                    return
+
+            # REQESTS LIB EXAMPLE----------------------------------------------
+            # try:
+            #     response = requests.get(rollbetter_url, timeout=20)
+            #     response.raise_for_status()
+            #     xws_dict = response.json()
+            #     logger.debug("Received XWS JSON", extra=log_context)
+            # except requests.exceptions.RequestException as e:
+            #     logger.error(
+            #         f"Failed to fetch XWS data: {e}",
+            #         extra=log_context,
+            #         exc_info=True,
+            #     )
+            #     await message.channel.send(
+            #         f"Sorry {message.author.mention}, "
+            #         "I couldn't retrieve list data."
+            #     )
+            #     return
+            # except json.JSONDecodeError as e:
+            #     logger.error(
+            #         f"Failed to decode JSON response: {e}. "
+            #         f"Response text: {response.text[:500]}...",
+            #         extra=log_context,
+            #         exc_info=True,
+            #     )
+            #     await message.channel.send(
+            #         f"Sorry {message.author.mention}, "
+            #         "I couldn't understand the list format."
+            #     )
+            #     return
+
+            if xws_dict is None:
+                # Error message already sent in the except blocks
                 return
 
             # --- Extract Core List Info ---
@@ -500,10 +555,6 @@ async def on_message(message: discord.Message):
                 ini_emoji = ini_emojis.get(pilot.get("initiative"), "❓")
                 pilot_name = pilot.get("name", "Unknown Pilot")
                 pilot_image = pilot.get("image", config.GOLDENROD_PILOTS_URL)
-                pilot_cost_str = f"({pilot.get('cost', '?')})"
-                pilot_line_base = f"{ship_emoji} {ini_emoji}"
-                pilot_line_base += f"**[{pilot_name}]({pilot_image})**"
-                pilot_line_base += f" {pilot_cost_str}"
 
                 upgrade_display_parts = []
                 for upg in upgrades:
@@ -525,17 +576,24 @@ async def on_message(message: discord.Message):
                     )
 
                 upgrades_formatted = (
-                    f": *{', '.join(upgrade_display_parts)}*"
+                    f"{', '.join(upgrade_display_parts)}"
                     if upgrade_display_parts
                     else ""
                 )
+                # If pilot has no upgrades display cost in square brackets
                 if upgrades_formatted == "":
+                    pilot_cost_str = f"__**[{pilot.get('cost', '?')}]**__"
                     pilot_total_str = ""
                 else:
+                    pilot_cost_str = f"({pilot.get('cost', '?')})"
                     pilot_total_str = f" __**[{pilot_total_cost}]**__"
+                # Constuct all parts of a pilot line for embed description
+                pilot_line_base = f"{ship_emoji} {ini_emoji}"
+                pilot_line_base += f"**[{pilot_name}]({pilot_image})**"
+                pilot_line_base += f"{pilot_cost_str}"
 
                 final_pilot_line = (
-                    f"{pilot_line_base}{upgrades_formatted}{pilot_total_str}\n"
+                    f"{pilot_line_base}: {upgrades_formatted} {pilot_total_str}\n"
                 )
 
                 if (
