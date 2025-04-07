@@ -1,0 +1,16 @@
+[Unit]
+Description=Podman management service for mongodb
+Before=poweroff.target halt.target shutdown.target
+
+[Service]
+Type=oneshot
+User=sogemoge
+WorkingDirectory=/opt/4-A7-maintenance/deploy/db
+ExecStart=/opt/4-A7-maintenance/deploy/db/podman-compose-mongodb.sh up
+ExecStop=/opt/4-A7-maintenance/deploy/podman-compose-mongodb.sh down
+RemainAfterExit=yes
+TimeoutStartSec=0
+TimeoutSec=3600
+
+[Install]
+WantedBy=shutdown.target halt.target

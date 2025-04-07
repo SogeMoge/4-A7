@@ -1,6 +1,7 @@
 [Unit]
 Description=Podman management service for xwsbot-maintenance
 Before=poweroff.target halt.target shutdown.target
+Requires=xwing-mongodb.service
 
 [Service]
 Type=oneshot
