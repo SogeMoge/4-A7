@@ -1,4 +1,4 @@
-FROM python:3.9.18-slim
+FROM python:3.13.2-slim
 
 COPY requirements.txt .
 RUN /usr/local/bin/python -m pip install --upgrade pip && pip install -r requirements.txt
