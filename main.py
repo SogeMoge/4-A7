@@ -303,6 +303,10 @@ class ConfirmationView(View):
 async def on_ready():
     logger.info(f"Logged in as {bot.user.name} (ID: {bot.user.id})")
     logger.info(f"{bot.user} is operational! Roger? Roger!.")
+    bot.add_view(Builders())
+    logger.info("Persistent Builders view added.")
+    bot.add_view(Rules())
+    logger.info("Persistent Rules view added.")
 
 
 @bot.event
@@ -668,7 +672,14 @@ async def on_message(message: discord.Message):
 
 
 class Rules(discord.ui.View):
-    @discord.ui.button(label="Standard", style=discord.ButtonStyle.primary)
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(
+        label="Standard",
+        style=discord.ButtonStyle.primary,
+        custom_id="persistent_rules:standatd",
+    )
     async def standard_button_callback(self, button, interaction):
         await interaction.response.send_message(
             "<https://x2po.org/standard>", ephemeral=True
@@ -677,20 +688,27 @@ class Rules(discord.ui.View):
     @discord.ui.button(
         label="Epic",
         style=discord.ButtonStyle.primary,
+        custom_id="persistent_rules:epic",
     )
     async def epic_button_callback(self, button, interaction):
         await interaction.response.send_message(
             "<https://x2po.org/epic>", ephemeral=True
         )
 
-    @discord.ui.button(label="Wild Space", style=discord.ButtonStyle.primary)
+    @discord.ui.button(
+        label="Wild Space",
+        style=discord.ButtonStyle.primary,
+        custom_id="persistent_rules:wildspace",
+    )
     async def ws_button_callback(self, button, interaction):
         await interaction.response.send_message(
             "<https://x2po.org/wild-space>", ephemeral=True
         )
 
     @discord.ui.button(
-        label="Adopted Battle Scenarios", style=discord.ButtonStyle.secondary
+        label="Adopted Battle Scenarios",
+        style=discord.ButtonStyle.secondary,
+        custom_id="persistent_rules:adoption",
     )
     async def bs_button_callback(self, button, interaction):
         await interaction.response.send_message(
@@ -698,7 +716,9 @@ class Rules(discord.ui.View):
         )
 
     @discord.ui.button(
-        label="Video tutorials", style=discord.ButtonStyle.secondary
+        label="Video tutorials",
+        style=discord.ButtonStyle.secondary,
+        custom_id="persistent_rules:vedotutorials",
     )
     async def vt_button_callback(self, button, interaction):
         await interaction.response.send_message(
@@ -706,7 +726,9 @@ class Rules(discord.ui.View):
         )
 
     @discord.ui.button(
-        label="Points", style=discord.ButtonStyle.success
+        label="Points",
+        style=discord.ButtonStyle.success,
+        custom_id="persistent_rules:points",
     )
     async def points_button_callback(self, button, interaction):
         await interaction.response.send_message(
@@ -715,8 +737,13 @@ class Rules(discord.ui.View):
 
 
 class Builders(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
     @discord.ui.button(
-        label="YASB 2.0 Legacy", style=discord.ButtonStyle.primary
+        label="YASB 2.0 Legacy",
+        style=discord.ButtonStyle.primary,
+        custom_id="persistent_builders:yasb",
     )
     async def yasb_button_callback(self, button, interaction):
         await interaction.response.send_message(
@@ -726,6 +753,7 @@ class Builders(discord.ui.View):
     @discord.ui.button(
         label="X-Wing 2nd Ed. Squads Designer",
         style=discord.ButtonStyle.secondary,
+        custom_id="persistent_builders:dmborque",
     )
     async def dmborque_button_callback(self, button, interaction):
         await interaction.response.send_message(
@@ -733,7 +761,9 @@ class Builders(discord.ui.View):
         )
 
     @discord.ui.button(
-        label="Infinite Arenas", style=discord.ButtonStyle.secondary
+        label="Infinite Arenas",
+        style=discord.ButtonStyle.secondary,
+        custom_id="persistent_builders:ia",
     )
     async def ia_button_callback(self, button, interaction):
         await interaction.response.send_message(
@@ -741,7 +771,9 @@ class Builders(discord.ui.View):
         )
 
     @discord.ui.button(
-        label="Launch Bay Next", style=discord.ButtonStyle.secondary
+        label="Launch Bay Next",
+        style=discord.ButtonStyle.secondary,
+        custom_id="persistent_builders:lbn",
     )
     async def lbn_button_callback(self, button, interaction):
         await interaction.response.send_message(
@@ -752,19 +784,20 @@ class Builders(discord.ui.View):
         )
 
 
-@bot.slash_command(description="Get X-Wing 2.0 Legacy rules.")
+@bot.slash_command(name="rules", description="Get X-Wing 2.0 Legacy rules.")
 async def rules(ctx):
-    await ctx.respond("**X-Wing 2.0 Legacy** rules:", view=Rules())
+    view = Rules()
+    await ctx.respond("**X-Wing 2.0 Legacy** rules:", view=view)
 
 
 @bot.slash_command(
-    description="Post X-Wing 2.0 Legacy compatible Squad Builders."
+    name="builders",
+    description="Post X-Wing 2.0 Legacy compatible Squad Builders.",
 )
 async def builders(ctx):
     """Post X-Wing 2.0 Legacy compatible Squad Builders."""
-    await ctx.respond(
-        "**2.0 Legacy** compatible Squad Builders:", view=Builders()
-    )
+    view = Builders()
+    await ctx.respond("**2.0 Legacy** compatible Squad Builders:", view=view)
 
 
 @bot.slash_command(description="200 000 units are ready")
