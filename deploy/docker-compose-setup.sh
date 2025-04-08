@@ -24,3 +24,48 @@ sudo cp deploy/db/xwing-mongodb.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable xwsbot.service
 sudo systemctl enable xwing-mongodb.service
+
+#========= extra block for github actions automation =========
+# sudo touch /etc/sudoers.d/100_xwing
+# echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl start xwing-mongodb.service" | sudo EDITOR='tee' visudo -f /etc/sudoers.d/100_xwing
+# echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop xwing-mongodb.service" | sudo EDITOR='tee -a' visudo -f /etc/sudoers.d/100_xwing
+# echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart xwing-mongodb.service" | sudo EDITOR='tee -a' visudo -f /etc/sudoers.d/100_xwing
+# echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl start xwsbot.service" | sudo EDITOR='tee -a' visudo -f /etc/sudoers.d/100_xwing
+# echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop xwsbot.service" | sudo EDITOR='tee -a' visudo -f /etc/sudoers.d/100_xwing
+# echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart xwsbot.service" | sudo EDITOR='tee -a' visudo -f /etc/sudoers.d/100_xwing
+
+# cat > 51.xwsbot.rules<< EOF
+# polkit.addRule(function(action, subject) {
+#   if (action.id == "org.freedesktop.systemd1.manage-units" &&
+#       (action.lookup("unit") == "xwing-mongodb.service" ||
+#        action.lookup("unit") == "xwsbot.service") &&
+#       subject.user == "$(whoami)") {
+#     return polkit.Result.YES;
+#   }
+# });
+# EOF
+# sudo mv 51.xwsbot.rules /etc/polkit-1/rules.d/51.xwsbot.rules
+# sudo systemctl restart polkit.service
+
+#========= extra block for github actions automation (maintenance version) =========
+# sudo touch /etc/sudoers.d/101_xwing
+# echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl start xwing-mongodb.maintenance.service" | sudo EDITOR='tee' visudo -f /etc/sudoers.d/101_xwing
+# echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop xwing-mongodb.maintenance.service" | sudo EDITOR='tee -a' visudo -f /etc/sudoers.d/101_xwing
+# echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart xwing-mongodb.maintenance.service" | sudo EDITOR='tee -a' visudo -f /etc/sudoers.d/101_xwing
+# echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl start xwsbot.maintenance.service" | sudo EDITOR='tee -a' visudo -f /etc/sudoers.d/101_xwing
+# echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl stop xwsbot.maintenance.service" | sudo EDITOR='tee -a' visudo -f /etc/sudoers.d/101_xwing
+# echo "$(whoami) ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart xwsbot.maintenance.service" | sudo EDITOR='tee -a' visudo -f /etc/sudoers.d/101_xwing
+
+
+# sudo cat > 51.xwsbot.maintenance.rules<< EOF
+# polkit.addRule(function(action, subject) {
+#   if (action.id == "org.freedesktop.systemd1.manage-units" &&
+#       (action.lookup("unit") == "xwing-mongodb.maintenance.service" ||
+#        action.lookup("unit") == "xwsbot.maintenance.service") &&
+#       subject.user == "$(whoami)") {
+#     return polkit.Result.YES;
+#   }
+# });
+# EOF
+# sudo mv 51.xwsbot.maintenance.rules /etc/polkit-1/rules.d/51.xwsbot.maintenance.rules
+# sudo systemctl restart polkit.service
