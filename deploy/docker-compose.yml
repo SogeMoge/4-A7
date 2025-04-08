@@ -1,0 +1,49 @@
+# Use root/example as user/password credentials
+services:
+  xwsbot:
+    depends_on:
+      mongo:
+        condition: service_healthy
+    image: docker.io/sogemoge/4-a7:latest
+    container_name: inventory_droid
+    environment:
+      - COMPOSE_PROJECT_NAME
+    restart: always
+    ports:
+      - 8081:801
+    env_file: ".env"
+    volumes:
+      - ../submodules/xwing-data2:/opt/4-A7/xwing-data2
+      - ../xwsbot.log:/opt/4-A7/xwsbot.log:Z
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+  mongo:
+    image: mongo
+    container_name: db_mongo
+    restart: always
+    ports:
+      - 27017:27017
+    env_file: ".env"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
+    healthcheck:
+      test: echo 'db.runCommand({serverStatus:1}).ok' | mongosh --authenticationDatabase admin --host localhost -u ${MONGO_INITDB_ROOT_USERNAME} -p ${MONGO_INITDB_ROOT_PASSWORD} admin --quiet | grep 1
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+  mongo-express:
+    image: mongo-express
+    container_name: db_mongo-express
+    restart: always
+    ports:
+      - 0.0.0.0:9081:8081
+    env_file: ".env"
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
+      ME_CONFIG_BASICAUTH_PASSWORD: ${ME_CONFIG_BASICAUTH_PASSWORD}
+      ME_CONFIG_MONGODB_URL: ${ME_CONFIG_MONGODB_URL}
