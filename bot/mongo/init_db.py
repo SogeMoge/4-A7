@@ -1,10 +1,8 @@
 import json
 import os
-import time
 from glob import iglob
 
 from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure
 from pymongo.server_api import ServerApi
 
 # mongodb_uri = "mongodb://root:example@localhost:27017/xwingdata?authSource=admin"
@@ -83,26 +81,6 @@ def drop_collections(mongodb_uri):
         print(f"Collections after drop: {xws_db.list_collection_names()}")
     finally:
         client.close()
-
-
-def retry_mongodb_connection(
-    func, mongodb_uri, *args, max_retries=10, retry_delay=5
-):
-    """Retries a MongoDB function with exponential backoff."""
-    retries = 0
-    while retries < max_retries:
-        try:
-            return func(*args, mongodb_uri=mongodb_uri)
-        except ConnectionFailure as e:
-            print(
-                f"MongoDB connection failed: {e}. Retrying in "
-                f"{retry_delay} seconds..."
-            )
-            retries += 1
-            time.sleep(retry_delay)
-    raise ConnectionFailure(
-        "Max retries reached. Failed to connect to MongoDB."
-    )
 
 
 def import_collection(collection_name, data_dir, mongodb_uri):
@@ -187,9 +165,7 @@ def prepare_collections(data_root_dir, mongodb_uri):
         Exception: If any other unexpected error occurs.
     """
     for collection_name in COLLECTIONS_UPLOAD:
-        retry_mongodb_connection(
-            import_collection, mongodb_uri, collection_name, data_root_dir
-        )
+        import_collection(collection_name, data_root_dir, mongodb_uri)
 
 
 def reload_collections(data_root_dir, mongodb_uri):
@@ -219,8 +195,6 @@ def reload_collections(data_root_dir, mongodb_uri):
             cannot be found.
         Exception: If any other unexpected error occurs.
     """
-    retry_mongodb_connection(drop_collections, mongodb_uri)
+    drop_collections(mongodb_uri)
     for collection_name in COLLECTIONS_UPLOAD:
-        retry_mongodb_connection(
-            import_collection, mongodb_uri, collection_name, data_root_dir
-        )
+        import_collection(collection_name, data_root_dir, mongodb_uri)

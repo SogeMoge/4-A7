@@ -9,7 +9,7 @@ from discord import ButtonStyle, Interaction
 from discord.ui import Button, View, button
 
 from bot import config
-from bot.mongo.init_db import reload_collections
+from bot.mongo.init_db import prepare_collections
 from bot.mongo.search import (
     find_faction,
     find_pilot,
@@ -824,7 +824,7 @@ if __name__ == "__main__":
     try:
         # --- Reinstate prepare_collections call ---
         logger.info("Preparing data collections (if needed)...")
-        reload_collections(
+        prepare_collections(
             config.XWS_DATA_ROOT_DIR, config.MONGODB_URI
         )  # Pass required vars
         logger.info("Data collections prepared.")
