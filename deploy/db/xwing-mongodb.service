@@ -9,7 +9,7 @@ RemainAfterExit=yes
 WorkingDirectory=/opt/droids/4-A7/deploy/db
 ExecStartPre=/bin/bash -c "docker-compose -f docker-compose.yml pull"
 ExecStart=/bin/bash -c "docker-compose -f docker-compose.yml up --detach"
-ExecStop=/bin/bash -c "docker-compose -f docker-compose.yml stop"
+ExecStop=/bin/bash -c "docker-compose -f docker-compose.yml down"
 TimeoutStartSec=0
 TimeoutSec=3600
 

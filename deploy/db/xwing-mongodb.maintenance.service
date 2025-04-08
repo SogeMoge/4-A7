@@ -9,7 +9,7 @@ RemainAfterExit=yes
 WorkingDirectory=/opt/droids/4-A7-maintenance/deploy/db
 ExecStartPre=/bin/bash -c "docker-compose -f docker-compose.maintenance.yml pull"
 ExecStart=/bin/bash -c "docker-compose -f docker-compose.maintenance.yml up --detach"
-ExecStop=/bin/bash -c "docker-compose -f docker-compose.maintenance.yml stop"
+ExecStop=/bin/bash -c "docker-compose -f docker-compose.maintenance.yml down"
 TimeoutStartSec=0
 TimeoutSec=3600
 
