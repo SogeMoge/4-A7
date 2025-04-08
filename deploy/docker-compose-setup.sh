@@ -24,6 +24,7 @@ sudo cp deploy/db/xwing-mongodb.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable xwsbot.service
 sudo systemctl enable xwing-mongodb.service
+sudo docker network create holonet
 
 #========= extra block for github actions automation =========
 # sudo touch /etc/sudoers.d/100_xwing
