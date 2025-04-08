@@ -16,3 +16,11 @@ sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin 
 
 sudo service docker start
 sudo service docker status
+
+cd /opt/droids/4-A7
+sudo cp deploy/bot/xwsbot.service /etc/systemd/system
+sudo cp deploy/bot/xwsbot.service /etc/systemd/system/
+sudo cp deploy/db/xwing-mongodb.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable xwsbot.service
+sudo systemctl enable xwing-mongodb.service

@@ -10,6 +10,6 @@ services:
     ports:
       - 0.0.0.0:8081:801
     volumes:
-      - /opt/droids/4-A7/.env:/opt/4-A7/.env:Z
+      - /opt/droids/4-A7/deploy/bot/.env:/opt/4-A7/.env:Z
       - /opt/droids/4-A7/submodules/xwing-data2:/opt/4-A7/xwing-data2
       - /opt/droids/4-A7/xwsbot.log:/opt/4-A7/xwsbot.log:Z
