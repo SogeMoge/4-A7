@@ -824,10 +824,12 @@ if __name__ == "__main__":
     try:
         # --- Reinstate prepare_collections call ---
         logger.info("Preparing data collections (if needed)...")
-        prepare_collections(
-            config.XWS_DATA_ROOT_DIR, config.MONGODB_URI
-        )  # Pass required vars
-        logger.info("Data collections prepared.")
+        try:
+            prepare_collections(
+                config.XWS_DATA_ROOT_DIR, config.MONGODB_URI
+            )  # Pass required vars
+        finally:
+            logger.info("Data collections prepared.")
         # --- End reinstate ---
 
         logger.info("Starting bot...")

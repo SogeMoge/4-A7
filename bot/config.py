@@ -16,7 +16,9 @@ RB_ENDPOINT = os.getenv(
     "RB_ENDPOINT",
     "https://rollbetter-linux.azurewebsites.net/lists/xwing-legacy?",
 )
-XWS_DATA_ROOT_DIR = "submodules/xwing-data2/data"  # For init_db
+XWS_DATA_ROOT_DIR = os.getenv(
+    "XWS_DATA_ROOT_DIR", "submodules/xwing-data2/data"
+)  # For init_db
 
 # --- External Asset URLs ---
 GOLDENROD_PILOTS_URL = (
