@@ -1,0 +1,18 @@
+[Unit]
+Description=MongoDB docker stack fro storing xwing-data2-legacy
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=sogemoge
+RemainAfterExit=yes
+WorkingDirectory=/opt/4-A7-maintenance/deploy/db
+ExecStartPre=/bin/bash -c "docker-compose -f docker-compose.maintenance.yml pull"
+ExecStart=/bin/bash -c "docker-compose -f docker-compose.maintenance.yml up --detach"
+ExecStop=/bin/bash -c "docker-compose -f docker-compose.maintenance.yml stop"
+TimeoutStartSec=0
+TimeoutSec=3600
+
+[Install]
+WantedBy=multi-user.target

@@ -1,5 +1,5 @@
 version: "3"
-name: xwsbot
+name: 4-a7
 services:
   xwsbot:
     image: docker.io/sogemoge/4-a7:latest

@@ -1,5 +1,5 @@
 version: "3"
-name: xwsbot-maintenance
+name: 4-a7-maintenance
 services:
   xwsbot:
     image: docker.io/sogemoge/4-a7-maintenance:latest
