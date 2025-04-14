@@ -41,9 +41,8 @@ jobs:
           SCRIPT_BEFORE: ls
           SCRIPT_AFTER: |
             cd ${{ secrets.REMOTE_TARGET }}
-            git fetch
-            git checkout ${{ env.BRANCH_NAME }}
-            git pull
+            git checkout master && git stash && git fetch -all && git reset --hard origin/master
+            git submodule update --recursive --remote
             export IMAGE_4A7=$(git log -n 1 --pretty=format:"%H" | cut -c1-8)
             sed -i -e "s/latest/${IMAGE_4A7}/g" deploy/docker-compose.yml
             systemctl restart xwsbot.service
