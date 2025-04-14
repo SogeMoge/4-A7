@@ -1,0 +1,17 @@
+[Unit]
+Description=Docker management service for xwsbot and mongodb
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/droids/4-A7/deploy/production
+ExecStartPre=/bin/bash -c "docker compose -f docker-compose.yml pull"
+ExecStart=/bin/bash -c "docker compose -f docker-compose.yml up --detach"
+ExecStop=/bin/bash -c "docker compose -f docker-compose.yml down"
+TimeoutStartSec=0
+TimeoutSec=3600
+
+[Install]
+WantedBy=multi-user.target

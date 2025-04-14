@@ -1,0 +1,54 @@
+openapi: 3.1.1
+info:
+  title: X-Wing Data API
+  version: 1.0.0
+paths:
+  /reinit_db:
+    post:
+      summary: Reinitialize the X-Wing data database.
+      description: This endpoint triggers a full re-import of the X-Wing data into the MongoDB database.  Use with caution!
+      responses:
+        "200":
+          description: Database reinitialized successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Database reinitialized successfully."
+        "500":
+          description: An error occurred during database reinitialization.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "An error occurred during database reinitialization."
+  /pilot/{xws}:
+    get:
+      summary: Get pilot data by XWS.
+      description: Retrieves pilot data from the database based on the provided XWS code.
+      parameters:
+        - in: path
+          name: xws
+          schema:
+            type: string
+          required: true
+          description: The XWS code of the pilot.
+      responses:
+        "200":
+          description: Pilot data found.
+        "404":
+          description: Pilot not found.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: "Pilot not found."
