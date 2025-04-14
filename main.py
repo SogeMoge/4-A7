@@ -566,7 +566,7 @@ async def on_message(message: discord.Message):
                     pilot_cost_str = f"__**[{pilot.get('cost', '?')}]**__"
                     pilot_total_str = ""
                 else:
-                    pilot_cost_str = f"({pilot.get('cost', '?')})"
+                    pilot_cost_str = f"({pilot.get('cost', '?')}):"
                     pilot_total_str = f" __**[{pilot_total_cost}]**__"
                 # Constuct all parts of a pilot line for embed description
                 pilot_line_base = f"{ship_emoji} {ini_emoji}"
@@ -574,7 +574,7 @@ async def on_message(message: discord.Message):
                 pilot_line_base += f"{pilot_cost_str}"
 
                 final_pilot_line = (
-                    f"{pilot_line_base}: {upgrades_formatted} "
+                    f"{pilot_line_base} {upgrades_formatted} "
                     f"{pilot_total_str}\n"
                 )
 
