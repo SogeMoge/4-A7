@@ -4,26 +4,26 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
-    image: docker.io/sogemoge/4-a7:latest
-    container_name: inventory_droid
+    image: docker.io/sogemoge/4-a7-maintenance:latest
+    container_name: inventory_droid_on_maintenance
     environment:
       - COMPOSE_PROJECT_NAME
     restart: always
     ports:
-      - 8081:801
+      - 8082:801
     env_file: ".env"
     volumes:
-      - ../submodules/xwing-data2:/opt/4-A7/xwing-data2
-      - ../xwsbot.log:/opt/4-A7/xwsbot.log:Z
+      - ../../submodules/xwing-data2:/opt/4-A7/xwing-data2
+      - ../../xwsbot.log:/opt/4-A7/xwsbot.log:Z
     extra_hosts:
     - "host.docker.internal:host-gateway"
 
   mongo:
     image: mongo
-    container_name: db_mongo
+    container_name: db_mongo-maintenance
     restart: always
     ports:
-      - 27017:27017
+      - 27018:27017
     env_file: ".env"
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
@@ -38,10 +38,10 @@ services:
 
   mongo-express:
     image: mongo-express
-    container_name: db_mongo-express
+    container_name: db_mongo-express-maintenance
     restart: always
     ports:
-      - 0.0.0.0:9081:8081
+      - 0.0.0.0:9082:8081
     env_file: ".env"
     environment:
       ME_CONFIG_BASICAUTH_USERNAME: ${ME_CONFIG_BASICAUTH_USERNAME}
