@@ -1,5 +1,4 @@
 """Variables for xws_dict conversion to pretty format."""
-
 import discord
 
 
@@ -15,7 +14,9 @@ def convert_xws(string):
         "separatistalliance": "Separatist Alliance",
     }
     words = string.split()
-    converted_words = [mapping.get(word.lower(), word) for word in words]
+    converted_words = [
+        mapping.get(word.lower(), word) for word in words
+    ]
     return " ".join(converted_words)
 
 
@@ -31,7 +32,9 @@ def convert_faction_to_dir(string):
         "separatistalliance": "separatist-alliance",
     }
     words = string.split()
-    converted_words = [mapping.get(word.lower(), word) for word in words]
+    converted_words = [
+        mapping.get(word.lower(), word) for word in words
+    ]
     return " ".join(converted_words)
 
 
@@ -52,18 +55,6 @@ def convert_faction_to_color(string):
 
     return color
 
-
-ini_emojis = {
-    0: "<:i0:1356688207886155777>",
-    1: "<:i1:1356688209467277332>",
-    2: "<:i2:1356688211451314348>",
-    3: "<:i3:1356688212952748058>",
-    4: "<:i4:1356688214559031436>",
-    5: "<:i5:1356688216383553556>",
-    6: "<:i6:1356688217897697350>",
-    7: "<:i7:1356688220146106580>",
-    8: "<:8:1356688221685154040>",
-}
 
 ship_emojis = {
     "asf01bwing": "<:asf01bwing:1158007152250736711>",
@@ -120,7 +111,7 @@ ship_emojis = {
     "vt49decimator": "<:vt49decimator:1158007642258673724>",
     "tierbheavy": "<:tierbheavy:1158007557277888533>",
     "gr75mediumtransport": "<:gr75mediumtransport:1158007287135354992>",
-    "mg100starfortresssf17": "<:mg100starfortresssf17:1158007333553713242>",
+    "mg100starfortress": "<:mg100starfortress:1158007333553713242>",
     "scavengedyt1300": "<:scavengedyt1300:1158007484196331580>",
     "rz2awing": "<:rz2awing:1158007391091175514>",
     "t70xwing": "<:t70xwing:1158007502349271142>",
