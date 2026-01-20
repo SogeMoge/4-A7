@@ -7,17 +7,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Contingency protocol
-        uses: cross-the-world/ssh-pipeline@master
+        uses: easingthemes/ssh-deploy@main
         with:
-          host: ${{ secrets.DC_HOST }}
-          user: ${{ secrets.DC_USER }}
-          key: ${{ secrets.DC_KEY }}
-          pass: ${{ secrets.DC_PASS }}
-          port: ${{ secrets.DC_PORT }}
-          connect_timeout: 10s
-          script: |
-            eval "$(ssh-agent -s)"
-            ssh-add /opt/.ssh/github
-            cd /opt/4-A7-maintenance 
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          ARGS: "-rlgoDzvc -i"
+          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+          TARGET: ${{ secrets.REMOTE_TARGET }}
+          SCRIPT_BEFORE: ls
+          SCRIPT_AFTER: |
+            cd ${{ secrets.REMOTE_MAINTENANCE_TARGET }}
             git submodule update --recursive --remote
-            sudo systemctl restart xwsbot-maintenance
+            systemctl restart xwsbot.service
