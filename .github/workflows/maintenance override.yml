@@ -7,15 +7,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Contingency protocol
-        uses: easingthemes/ssh-deploy@main
+        uses: appleboy/ssh-action@v1.2.5
         with:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          ARGS: "-rlgoDzvc -i"
-          REMOTE_HOST: ${{ secrets.REMOTE_HOST }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-          TARGET: ${{ secrets.REMOTE_TARGET }}
-          SCRIPT_BEFORE: ls
-          SCRIPT_AFTER: |
-            cd ${{ secrets.REMOTE_MAINTENANCE_TARGET }}
+          host: ${{ secrets.REMOTE_HOST }}
+          username: ${{ secrets.REMOTE_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ${{ env.REMOTE_MAINTENANCE_TARGET }}
             git submodule update --recursive --remote
-            systemctl restart xwsbot.service
+            systemctl restart xwsbot.maintenance.service

@@ -122,6 +122,11 @@ WELCOME_GIFS = [
     "https://tenor.com/view/y-wing-bomber-republicbomber-clone-wars-grand-army-of-the-republic-republic-gif-23771349",
     "https://tenor.com/view/star-wars-gif-22561568",
     "https://tenor.com/view/star-wars-star-wars-squadrons-x-wing-tie-fighter-chase-gif-17576758",
+    "https://tenor.com/view/y-wing-btl-s3-y-wing-destroys-interceptor-y-wing-starfighter-gif-6391434659150765545",
+    "https://tenor.com/view/biggs-darklighter-biggs-darklighter-x-wing-tie-fighter-gif-14940128557407624619",
+    "https://tenor.com/view/y-wing-y-wing-btl-a4-btl-a4-y-wing-trench-run-gif-8520804281653625150",
+    "https://tenor.com/view/y-wing-y-wing-star-wars-pilot-y-wing-pilot-y-wing-pilot-gif-3588821411191109988",
+    "https://tenor.com/view/y-wing-y-wing-trench-run-btl-a4-btl-a4-gif-14135523202167658262",
 ]
 
 THE_WAY_GIFS = [
