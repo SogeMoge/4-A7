@@ -13,8 +13,6 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo ${{ secrets.REMOTE_MAINTENANCE_TARGET }}
-            ${{ secrets.REMOTE_TARGET }}
-            cd ${{ secrets.REMOTE_MAINTENANCE_TARGET }}
+            cd ${{ env.REMOTE_MAINTENANCE_TARGET }}
             git submodule update --recursive --remote
             systemctl restart xwsbot.maintenance.service

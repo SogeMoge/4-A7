@@ -51,7 +51,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
-            cd ${{ secrets.REMOTE_MAINTENANCE_TARGET }}
+            cd ${{ env.REMOTE_MAINTENANCE_TARGET }}
             git fetch --all
             git checkout ${{ env.BRANCH_NAME }}
             git pull

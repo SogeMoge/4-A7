@@ -52,7 +52,7 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
-            cd ${{ secrets.REMOTE_TARGET }}
+            cd ${{ env.REMOTE_TARGET }}
             git checkout master && git stash && git fetch --all && git reset --hard origin/master
             git submodule update --recursive --remote
             export IMAGE_4A7=$(git log -n 1 --pretty=format:"%H" | cut -c1-8)

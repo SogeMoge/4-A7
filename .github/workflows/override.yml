@@ -13,7 +13,7 @@ jobs:
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd ${{ secrets.REMOTE_TARGET }}
+            cd ${{ env.REMOTE_TARGET }}
             git checkout master && git stash && git fetch --all && git reset --hard origin/master
             git submodule update --recursive --remote
             systemctl restart xwsbot.service
