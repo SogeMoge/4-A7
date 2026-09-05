@@ -12,6 +12,7 @@ jobs:
           host: ${{ secrets.REMOTE_HOST }}
           username: ${{ secrets.REMOTE_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd ${{ env.REMOTE_TARGET }}
             git checkout master && git stash && git fetch --all && git reset --hard origin/master
