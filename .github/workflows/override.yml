@@ -15,6 +15,6 @@ jobs:
           passphrase: ${{ secrets.SSH_PASSPHRASE }}
           script: |
             cd ${{ vars.REMOTE_TARGET }}
-            git checkout master && git stash && git fetch --all && git reset --hard origin/master
+            git checkout master && git stash && git reset --hard origin/master
             git submodule update --recursive --remote
             systemctl restart xwsbot.service
